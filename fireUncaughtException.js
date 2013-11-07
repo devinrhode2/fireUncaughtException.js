@@ -7,66 +7,25 @@ function fireUncaughtExcepton(uncaughtException) {
   } catch (exceptionCallingOnUncaughtException) { // what a gnarly exception..
 
     if (typeof onuncaughtException === 'undefined') {
-
-      exceptionalException(new Error('You need assign window.onuncaughtException to some function.'));
-
+      exceptionalException(new Error([
+        'Please define a window.onuncaughtException function.',
+        'For example:',
+        '  window.onuncaughtException = function (uncaughtException) {',
+        '    //log uncaughtException.stack to your server',
+        '  };'
+      ].join('\n')));
     } else { // apparently `onuncaughtException` IS DEFINED...
       if (Object.prototype.toString.call(onuncaughtException) != '[object Function]') {
         exceptionalException(new TypeError('onuncaughtException is not a function'));
       } else {
         exceptionalException(exceptionCallingOnUncaughtException);
-        exceptionalException(uncaughtException);
       }
     }
+    exceptionalException(uncaughtException);
 
   } // catch exceptionCallingOnUncaughtException
 }
 
-/**
-exceptionalException
-
-An exceptionalException is when there is an exception calling window.onuncaughtException.
-
-You can also use it for any other scenario where you
-catch an exception and can't really do anything about it.
-
-The function prompts the user asking if they could send an email about the
-which is defined in the 3rd statement in this funciton.
-If the user agrees to this message by hitting OK, then a mailto link
-will be opened with the body= the javascript stack traces.
-
-exceptionalException adds properties onto itself as options.
-It doesn't need to be part of stack traces, so a function
-expression works instead of a function declaration(){ }
-
-Options are:
- - emailErrors: boolean. Defaults to asking the user the confirmDialogMessage for emailing errors or not.
- - confirmDialogMessage: Defaults to:
-    "Email error?
-
-     We had a serious issue and were not able to automatically report an error.
-     Click "ok" to send an email about the error so we can fix it.
-
-     Thanks!"
- - email: Email address to send errors to. Defaults to unrecordedJavaScriptError@{domain},support@{domain} (all subdomains are removed)
- - mailtoParams.subject: Subject of email
- - mailtoParams.body: Top of the email message
- - stringifyError: function used to turn input to exceptionalException into a string
-     when it is not a string (exception or potentially something else..)
-You need to set options after the library loads.
-It is, after all, about catching and reporting errors.
-If you have javascript above the library that has an error,
-the purpose has been defeated.
-
-@type function
-@example
-   // Attempt to perform basic mission critical tasks
-   try {
-     loadScript('jquery')
-   } catch (e) {
-     exceptionalException('failed to load jQuery.')
-   }
- */
 
 window.exceptionalException = function(message) {
   //'use strict'; //'use strict' is senseless here. We don't need the crutch creating exceptions here.
@@ -127,6 +86,9 @@ window.exceptionalException = function(message) {
         }
       }, 100);
     })(lastMessageReceived);
+
+    //inform the world as to whether or not the user attempted to report an error or not
+    return ee.emailErrors;
   };
 
   // ## Initialization:
