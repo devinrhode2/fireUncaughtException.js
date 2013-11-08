@@ -34,9 +34,9 @@ try {
 }
 ```
 
-`fireUncaughtExcepton` will simply call `onuncaughtException` in a safe way. If an exception occurs, it will first check if it's defined and is a funciton. If it is both of these, then we create a `confirm` dialog, asking if they would be willing to **email** the error to you, because we failed to report it. This can also be determined by a setting in your application by just setting the exceptionalException.emailErrors boolean. (to ask user to email errors or not)
+`fireUncaughtExcepton` will simply call `onuncaughtException` in a safe way. If an exception occurs, it will first check if it's defined and that it is a function. If it is both of these, then we create a `confirm` dialog, asking the user if they would be willing to **email** the error to support@domain.com, "because we failed to report it". Instead of a using a confirm alert dialog, you can use a user setting for "send information to company X?" just setting the exceptionalException.emailErrors to try. (to ask user to email errors or not)
 
-
+q
 
 
 exceptionalException
