@@ -38,8 +38,6 @@ window.exceptionalException = function(message) {
     //check if the user has approved emailing errors
     if (!ee.emailErrors) return 'User does not want to email errors.';
 
-    console.log('exceptionalException received:', message);
-
     //make sure the message is a string
     if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) { //String type check from lodash.js compat build, search "function isString"
       //ensure stack property is computed
@@ -125,7 +123,7 @@ window.exceptionalException = function(message) {
 
   //start!
   //first thing we want to do is ask the user if they even want to email errors.
-  ee.emailErrors = confirm(ee.confirmDialogMessage);
+  ee.emailErrors = confirm(ee.confirmDialogMessage); // TODO: Add in actual error message!!
 
   //now that we have our initialization done and state variables defined, let it roll
   return exceptionalException(message);

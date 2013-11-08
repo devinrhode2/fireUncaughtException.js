@@ -1,15 +1,42 @@
 ### fireUncaughtExcepton
 
+For most people, you probably DO NOT want to use this low-level library.
+Instead, you might do this:
+```javascript
+try {
+  // javascript
+} catch (e) {
+  onuncaughtException(e);
+}
+```
+or this:
+```javascript
+try {
+  // javascript
+} catch (e) {
+  if (window.onuncaughtException) {
+    window.onuncaughtException(e);
+  } else {
+    throw e;
+  }
+}
+```
+
+Now, if you do not ever want to re-`throw` the exception, and are set on sending the exception to an
+`oncaughtException` function, use `fireUncaughtExcepton`:
+
 Usage:
 ```javascript
 try {
   //code...
 } catch (uncaughtException) {
-  fireUncaughtExceptonEvent(uncaughtException);
+  fireUncaughtExcepton(uncaughtException);
 }
 ```
 
-This just calls `onuncaughtException` in a safe way. If an
+`fireUncaughtExcepton` will simply call `onuncaughtException` in a safe way. If an exception occurs, it will first check if it's defined and is a funciton. If it is both of these, then we create a `confirm` dialog, asking if they would be willing to **email** the error to you, because we failed to report it. This can also be determined by a setting in your application by just setting the exceptionalException.emailErrors boolean. (to ask user to email errors or not)
+
+
 
 
 exceptionalException
