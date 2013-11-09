@@ -1,4 +1,4 @@
-### Question
+# Question
 
 How can I register a global "uncaught exception" handler for javascript in the browser?
 <strong><a href="http://nodejs.org/api/process.html#process_event_uncaughtexception">In node it's simple</a></strong>,
