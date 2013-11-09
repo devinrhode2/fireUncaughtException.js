@@ -1,15 +1,27 @@
-### fireUncaughtExcepton
+### Question
 
-For most people, you probably DO NOT want to use this low-level library.
-Instead, you might do this:
+How can I register a global "uncaught exception" handler for javascript in the browser?
+<strong><a href="http://nodejs.org/api/process.html#process_event_uncaughtexception">In node it's simple</a></strong>,
+in the browser, all you have is
+<strong><code><a href="http://webcache.googleusercontent.com/search?q=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&oq=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&aqs=chrome..69i57j69i58.3391j0j4&sourceid=chrome&espv=210&es_sm=91&ie=UTF-8">window.onerror</a></code></strong>
+
+<h4><code>window.onerror</code></h4>:
 ```javascript
-try {
-  // javascript
-} catch (e) {
-  onuncaughtException(e);
+window.onerror = function(message, url, lineNo) {
+  // Script with error was hosted on a different domain, the message is just "Script error." with no line number or url!
 }
 ```
-or this:
+
+But don't forget, we have the `try-catch-finally` block!
+
+Problem: How can I catch all errors and send them to one function?
+Solution: Write a library, establish a backwards-compatible standard, and encourage all javascript libraries to add a
+try-catch block, and send exceptions they catch to `window.onuncaughtException`
+
+I have a solution in progress that helps you re-define library functions and catch their errors:
+http://Github.com/devinrhode2/shield.js
+
+Most people will want to fire an `uncaughtException`, without a library, like this:
 ```javascript
 try {
   // javascript
@@ -21,6 +33,24 @@ try {
   }
 }
 ```
+
+Maybe even skip the `if` check!
+```javascript
+try {
+  // javascript
+} catch (uncaughtException) {
+  onuncaughtException(uncaughtException);
+}
+```
+
+Now, if you really believe that the javascript community should have a way to register a global `uncaughtException`
+handler, you may want to really bark at them if they don't define one!
+
+What if they did define a `window.onuncaughtException` function, but there was an exception when you called it?!
+Now you have 2 exceptions on your hands that may go un-discovered.
+
+That's where _this_ library comes in. It barks at the developer for you, and asks the user (via <code><a href="http://lmgtfy.com/?confirm+javascript+function">confirm</a></code>)
+if they would like to email the error to you (via `window.open('mailto:`).
 
 Now, if you do not ever want to re-`throw` the exception, and are set on sending the exception to an
 `oncaughtException` function, use `fireUncaughtExcepton`:
@@ -34,7 +64,11 @@ try {
 }
 ```
 
-`fireUncaughtExcepton` will simply call `onuncaughtException` in a safe way. If an exception occurs, it will first check if it's defined and that it is a function. If it is both of these, then we create a `confirm` dialog, asking the user if they would be willing to **email** the error to support@domain.com, "because we failed to report it". Instead of a using a confirm alert dialog, you can use a user setting for "send information to company X?" just setting the exceptionalException.emailErrors to try. (to ask user to email errors or not)
+`fireUncaughtExcepton` simply calls `onuncaughtException`, but if an exception occurs in doing so, it first checks if
+it's defined and is a function. If not, it .....
+
+If it is, then we have an `exceptionalException`, which creates a `confirm` dialog
+listing all the errors, asking the user if they would be willing to **email** the error to support@domain.com, "because we failed to report it". Instead of a using a confirm alert dialog, you can use a user setting for "send information to company X?" just setting the exceptionalException.emailErrors to try. (to ask user to email errors or not)
 
 q
 
