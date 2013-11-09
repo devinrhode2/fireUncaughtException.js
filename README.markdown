@@ -46,8 +46,8 @@ try {
 Now, if you really believe that the javascript community should have a way to register a global `uncaughtException`
 handler, you may want to really bark at them if they don't define one!
 
-What if they did define a `window.onuncaughtException` function, but there was an exception when you called it?!
-Now you have 2 exceptions on your hands that may go un-discovered.
+But what if they did define a `window.onuncaughtException` function, but there was an exception when you called it?!
+Now you have 2 exceptions on your hands that may go un-discovered if not found when testing.
 
 That's where _this_ library comes in. It barks at the developer for you, and asks the user (via <code><a href="http://lmgtfy.com/?confirm+javascript+function">confirm</a></code>)
 if they would like to email the error to you (via `window.open('mailto:`).
