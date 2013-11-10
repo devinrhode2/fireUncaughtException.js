@@ -26,6 +26,7 @@ function fireUncaughtExcepton(uncaughtException) {
   } // catch exceptionCallingOnUncaughtException
 }
 
+window.fireUncaughtExcepton = fireUncaughtExcepton;
 
 window.exceptionalException = function(message) {
   //'use strict'; //'use strict' is senseless here. We don't need the crutch creating exceptions here.
