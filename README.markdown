@@ -64,14 +64,20 @@ try {
 }
 ```
 
-`fireUncaughtExcepton` simply calls `onuncaughtException`, but if an exception occurs in doing so, it first checks if
-it's defined and is a function. If not, it .....
+`fireUncaughtExcepton` simply calls `onuncaughtException`, but if an exception occurs in doing so, it
+first checks if it's defined as a function. If it is, then we have an `exceptionalException`, which
+creates a `confirm` dialog listing all the errors, asking the user if they would be willing to **email**
+the error to support@domain.com, "because we failed to report it". Instead of a using a confirm alert
+dialog, you can use a user setting for "send information to company X?" just setting the
+exceptionalException.emailErrors to try. (to ask user to email errors or not)
 
-If it is, then we have an `exceptionalException`, which creates a `confirm` dialog
-listing all the errors, asking the user if they would be willing to **email** the error to support@domain.com, "because we failed to report it". Instead of a using a confirm alert dialog, you can use a user setting for "send information to company X?" just setting the exceptionalException.emailErrors to try. (to ask user to email errors or not)
+===============
 
-q
 
+If you don't want to email errors, you can `noop` exceptionalException like this:
+```javascript
+window.exceptionalException = function(){};
+```
 
 exceptionalException
 

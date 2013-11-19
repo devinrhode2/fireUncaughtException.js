@@ -1,10 +1,10 @@
 function fireUncaughtExcepton(uncaughtException) {
-  // uncaughtException's get sent to onuncaughtException:
+  // uncaughtException's just handed over to onuncaughtException:
   try {
-    onuncaughtException(uncaughtException);
+    return onuncaughtException(uncaughtException);
 
     // I use this try-catch structure instead of several if checks for efficiency
-  } catch (exceptionCallingOnUncaughtException) { // what a gnarly exception..
+  } catch (exceptionCallingOnUncaughtException) { // what a gnarly exception..!
 
     if (typeof onuncaughtException === 'undefined') {
       exceptionalException(new Error([
@@ -25,56 +25,64 @@ function fireUncaughtExcepton(uncaughtException) {
 
   } // catch exceptionCallingOnUncaughtException
 }
-
 window.fireUncaughtExcepton = fireUncaughtExcepton;
 
 window.exceptionalException = function(message) {
-  //'use strict'; //'use strict' is senseless here. We don't need the crutch creating exceptions here.
+  //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially.
 
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
 
-  //define the actual core function: (options are initialized below)
+  // Define the actual core function: (INITIALIZATION BELOW)
   window.exceptionalException = function(message) {
-    //check if the user has approved emailing errors
-    if (!ee.emailErrors) return 'User does not want to email errors.';
-
-    //make sure the message is a string
-    if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) { //String type check from lodash.js compat build, search "function isString"
-      //ensure stack property is computed
-      message.stack;
+    // Make sure the message is a string, lodash style (search "function isString" in lodash.compat.js)
+    if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) {
+      // Ensure stack property is computed, or alias Opera 10's stacktrace property to it
+      message.stack || (message.stack = message.stacktrace);
       message = ee.stringifyError(message);
     }
 
-    //Add the message to the email body.
+    // Add the message to the email body.
     ee.mailtoParams.body += '\n\n' + message;
 
-    //mark the message as received.
+    // Mark message as received.
     if (receivedErrorMessages[message]) return 'already received this error message';
     receivedErrorMessages[message] = true;
     lastMessageReceived = message;
 
-    //get a snapshot of the lastMessageReceived at the start of the timeout by using a closure
+    // Get a snapshot of the lastMessageReceived at the start of the timeout by using a closure
     (function(lastMessageAtStartOfTimeout){
       setTimeout(function(){
-        //if lastMessageReceived has changed since the start of the timeout.. bail
-        if (lastMessageReceived !== lastMessageAtStartOfTimeout) return;
+        if (lastMessageReceived !== lastMessageAtStartOfTimeout) return; //bail and try sending on next timeout
 
         ee.mailtoParams.body += '\n\nSincerely, person';
 
-        //re-use message variable under alias
-        var finalUrl = message = 'mailto:' + ee.email + '?';
+        var finalUrl = message; //re-use message variable under alias
+        finalUrl = 'mailto:' + ee.email + '?';
 
-        //mailtoParams needs to be turned into a querystring parameters and appended to finalUrl
+        // mailtoParams needs to be turned into a querystring parameters and appended to finalUrl
         for (var param in ee.mailtoParams) {
           if (ee.mailtoParams.hasOwnProperty(param)) {
             finalUrl += param + '=' + encodeURIComponent(ee.mailtoParams) + '&';
           }
         }
 
-        // Now we will attempt to load the mailto link via popup, but if that fails we will just do a redirect to compose the email
-        if (!window.open(finalUrl, null, 'scrollbars=yes,resizable=yes,toolbar=no,location=yes,width=550,height=420,left=445,top=240')) {
-          //window.open arguments taken from twitters tweet button
+        // We have the error report containing all errors setup and are ready to send it,
+        // let's ask the user if they are willing to:
+        if (confirm([
+          ee.emailPreface + '\n',
+          'To:' + ee.mailtoParams.email,
+          'Subject:' + ee.mailtoParams.subject,
+          ee.mailtoParams.body
+        ].join('\n'))) {
+
+        // Now we will attempt to load the mailto link via popup, but if that
+        // fails we will just do a redirect to compose the email
+        if (!window.open(
+               finalUrl,
+               null,
+               'scrollbars=yes,resizable=yes,toolbar=no,location=yes,width=550,height=420,left=445,top=240')) {
+          // window.open arguments taken from twitters tweet button
           location.href = finalUrl;
           if (location.href !== finalUrl) {
             alert('System failed to redirect to compose email. ' +
@@ -83,29 +91,29 @@ window.exceptionalException = function(message) {
                   ee.mailtoParams.body);
           }
         }
+
+        } else {
+            return 'User does not want to email errors.';
+        }
       }, 100);
     })(lastMessageReceived);
-
-    //inform the world as to whether or not the user attempted to report an error or not
-    return ee.emailErrors;
   };
 
   // ## Initialization:
 
-  // alias:
+  // Alias:
   var ee = window.exceptionalException;
-  ee.confirmDialogMessage || (
-    ee.confirmDialogMessage =
-      'Email error? \n\nWe had a serious issue and were not able ' +
-      'to automatically report an error. Click "ok" to send an email ' +
-      'about the error so we can fix it.\n\nThanks!'
+  ee.emailPreface || (
+    ee.emailPreface =
+      'Email error? We had a serious error and were not able to report it. ' +
+      'Press "OK" to send this email from your mail application. '
   );
   ee.email || (
-    //in these first 2 statements, ee.email becomes the domain name
+    // In these first 2 statements, ee.email becomes the domain name
     ee.email = location.hostname.split('.'),
     ee.email = ee.email[ee.email.length - 2] + '.' +
                ee.email[ee.email.length - 1],
-    ee.email = 'unrecordedJavaScriptError@' + ee.email + ',support@' + ee.email
+    ee.email = 'support@' + ee.email + ',engineering+unrecordedJavaScriptError@' + ee.email
   );
 
   ee.mailtoParams || (ee.mailtoParams = {});
@@ -122,10 +130,7 @@ window.exceptionalException = function(message) {
   ee.stringifyError || (ee.stringifyError = stringifyError);
 
 
-  //start!
-  //first thing we want to do is ask the user if they even want to email errors.
-  ee.emailErrors = confirm(ee.confirmDialogMessage); // TODO: Add in actual error message!!
-
-  //now that we have our initialization done and state variables defined, let it roll
+  // Start!
+  // Now that we have our initialization done and state variables defined, let it roll
   return exceptionalException(message);
 };
