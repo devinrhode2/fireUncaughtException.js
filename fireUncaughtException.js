@@ -1,5 +1,21 @@
+/*!
+ * fireUncaughtExcepton.js - Catch exceptions and send them to window.onuncaughtException(e).
+ * fireUncaughtException(e) is just a more robust way of calling this function
+ *
+ * github.com/devinrhode2/fireUncaughtExcepton.js
+ *
+ * Copyright (c) 2013 fireUncaughtExcepton.js contributors
+ * MIT Licensed
+ */
+(function(){
+  var window = this; // this === window in the browser, this === global in node.
+  var undefined;
+
+// Closure Compiler will rename this function. With proper source-mapping, you can
 function fireUncaughtExcepton(uncaughtException) {
-  // uncaughtException's just handed over to onuncaughtException:
+  // uncaughtException's just handed over to onuncaughtException.
+  // The return is included to be as transparent as possible,
+  // it makes new interesting use cases and patterns possible
   try {
     return onuncaughtException(uncaughtException);
 
@@ -25,10 +41,10 @@ function fireUncaughtExcepton(uncaughtException) {
 
   } // catch exceptionCallingOnUncaughtException
 }
-window.fireUncaughtExcepton = fireUncaughtExcepton;
+window['fireUncaughtExcepton'] = fireUncaughtExcepton;
 
-window.exceptionalException = function(message) {
-  //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially.
+window['exceptionalException'] = function(message) {
+  //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially here.
 
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
@@ -76,21 +92,21 @@ window.exceptionalException = function(message) {
           ee.mailtoParams.body
         ].join('\n'))) {
 
-        // Now we will attempt to load the mailto link via popup, but if that
-        // fails we will just do a redirect to compose the email
-        if (!window.open(
-               finalUrl,
-               null,
-               'scrollbars=yes,resizable=yes,toolbar=no,location=yes,width=550,height=420,left=445,top=240')) {
-          // window.open arguments taken from twitters tweet button
-          location.href = finalUrl;
-          if (location.href !== finalUrl) {
-            alert('System failed to redirect to compose email. ' +
-                  'Email is shown below to copy and paste:\n\n' +
-                  ee.mailtoParams.subject + '\n\n' +
-                  ee.mailtoParams.body);
+          // If loading the mailto link via popup fails...
+          if (!window.open(
+                 finalUrl,
+                 null,
+                 // arg string taken from twitters tweet button
+                 'scrollbars=yes,resizable=yes,toolbar=no,location=yes,width=550,height=420,left=445,top=240')) {
+            // we will just do a redirect to compose the email
+            location.href = finalUrl;
+            if (location.href !== finalUrl) {
+              alert('System failed to redirect to compose email. ' +
+                    'Email is shown below to copy and paste:\n\n' +
+                    ee.mailtoParams.subject + '\n\n' +
+                    ee.mailtoParams.body);
+            }
           }
-        }
 
         } else {
             return 'User does not want to email errors.';
