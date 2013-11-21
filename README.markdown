@@ -63,11 +63,12 @@ try {
 `sendUncaughtException` simply calls `onuncaughtException`, but if there's an exception
 calling `window.onuncaughtException`, we have an `exceptionalException`.
 
-This function will wait 100 milliseconds until it is no longer receiving any new exceptions,
-create an email preview and ask the user if they are willing to send it with a `confirm` dialog.
+`exceptionalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
+and then creates an email report of the errors and asks the user if they are willing to send it with a `confirm` dialog.
 If they hit OK, a window for a `mailto` link with all the info pre-populated pops up.
 
-ou'll discover your own errors first via the `confirm` dialog,
+The `confirm` dialog is also a quick and convenient 
+You'll discover your own errors first via the `confirm` dialog,
 sparing you from opening the console.
 
 If you don't want to ask users to email errors, you can `noop` exceptionalException like this:
@@ -75,20 +76,12 @@ If you don't want to ask users to email errors, you can `noop` exceptionalExcept
 window.exceptionalException = function(){};
 ```
 
-exceptionalException
-
-The function prompts the user asking if they could send an email about the
-which is defined in the 3rd statement in this funciton.
-If the user agrees to this message by hitting OK, then a mailto link
-will be opened with the body= the javascript stack traces.
-
 exceptionalException adds properties onto itself as options.
-It doesn't need to be part of stack traces, so a function
-expression works instead of a function declaration(){ }
 
 Options are:
  - emailErrors: boolean. Defaults to asking the user the confirmDialogMessage for emailing errors or not.
- - confirmDialogMessage: Defaults to:
+ - emailPreface: Defaults to:
+=====
     "Email error?
 
      We had a serious issue and were not able to automatically report an error.
@@ -100,16 +93,13 @@ Options are:
  - mailtoParams.body: Top of the email message
  - stringifyError: function used to turn input to exceptionalException into a string
      when it is not a string (exception or potentially something else..)
-You need to set options after the library loads.
-It is, after all, about catching and reporting errors.
-If you have javascript above the library that has an error,
-the purpose has been defeated.
 
-@type function
-@example
-   // Attempt to perform basic mission critical tasks
-   try {
-     loadScript('jquery')
-   } catch (e) {
-     exceptionalException('failed to load jQuery.')
-   }
+You can use exceptionalException for other mission-critical fails:
+
+```javascript
+try {
+  loadScript('jquery')
+} catch (e) {
+  exceptionalException('failed to load jQuery.')
+}
+```
