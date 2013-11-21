@@ -10,7 +10,8 @@ in the browser, all you have is
 
 ```javascript
 window.onerror = function(message, url, lineNo) {
-  // If failing script was hosted on a different domain, the message is just "Script error." with no line number or url!
+  // If failing script was hosted on a different domain, the message is just "Script error."
+  // No line number or url!
 }
 ```
 
@@ -46,48 +47,35 @@ try {
 }
 ```
 
-Now, if you really believe that the javascript community should have a way to register a global `uncaughtException`
-handler, you may want to really bark at them if they don't define one!
+If you really believe that the javascript community should have a way to register a global `uncaughtException`
+handler, you'll probably want to use this library.
 
-But what if they did define a `window.onuncaughtException` function, but there was an exception when you called it?!
-Now you have 2 exceptions on your hands that may go un-discovered if not found when testing.
+# Usage:
 
-That's where _this_ library comes in. It barks at the developer for you, and asks the user (via <code><a href="http://lmgtfy.com/?confirm+javascript+function">confirm</a></code>)
-if they would like to email the error to you (via `window.open('mailto:`).
-
-Now, if you do not ever want to re-`throw` the exception, and are set on sending the exception to an
-`oncaughtException` function, use `sendUncaughtException`:
-
-Usage:
 ```javascript
 try {
-  //code...
-} catch (uncaughtException) {
-  sendUncaughtException(uncaughtException);
+  // code
+} catch (e) {
+  sendUncaughtException(e);
 }
 ```
 
-`sendUncaughtException` simply calls `onuncaughtException`, but if an exception occurs in doing so, it
-first checks if it's defined as a function. If it is, then we have an `exceptionalException`, which
-creates a `confirm` dialog listing all the errors, asking the user if they would be willing to **email**
-the error to support@domain.com, "because we failed to report it". Instead of a using a confirm alert
-dialog, you can use a user setting for "send information to company X?" just setting the
-exceptionalException.emailErrors to try. (to ask user to email errors or not)
+`sendUncaughtException` simply calls `onuncaughtException`, but if there's an exception
+calling `window.onuncaughtException`, we have an `exceptionalException`.
 
-===============
+This function will wait 100 milliseconds until it is no longer receiving any new exceptions,
+create an email preview and ask the user if they are willing to send it with a `confirm` dialog.
+If they hit OK, a window for a `mailto` link with all the info pre-populated pops up.
 
+ou'll discover your own errors first via the `confirm` dialog,
+sparing you from opening the console.
 
-If you don't want to email errors, you can `noop` exceptionalException like this:
+If you don't want to ask users to email errors, you can `noop` exceptionalException like this:
 ```javascript
 window.exceptionalException = function(){};
 ```
 
 exceptionalException
-
-An exceptionalException is when there is an exception calling window.onuncaughtException.
-
-You can also use it for any other scenario where you
-catch an exception and can't really do anything about it.
 
 The function prompts the user asking if they could send an email about the
 which is defined in the 3rd statement in this funciton.
