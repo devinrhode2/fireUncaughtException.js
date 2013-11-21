@@ -11,6 +11,5 @@
     "Devin Rhode <devinrhode2@gmail.com> (http://twitter.com/devinrhode2)"
   ],
   "bugs": "https://github.com/devinrhode2/fireUncaughtException.js/issues",
-  "repository": { "type": "git", "url": "https://github.com/devinrhode2/fireUncaughtException.js.git" },
-  "engines": ["node", "rhino"]
+  "repository": { "type": "git", "url": "https://github.com/devinrhode2/fireUncaughtException.js.git" }
 }
