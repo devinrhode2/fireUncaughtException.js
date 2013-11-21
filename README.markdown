@@ -1,24 +1,20 @@
 # Question
 
-How can I register a global "uncaught exception" handler for javascript in the browser?
-<strong>
-  <a href="http://nodejs.org/api/process.html#process_event_uncaughtexception">
-    In node it's simple
-  </a>
-</strong>,in the browser, all you have is
-<strong><code>
-  <a href="http://webcache.googleusercontent.com/search?q=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&oq=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&aqs=chrome..69i57j69i58.3391j0j4&sourceid=chrome&espv=210&es_sm=91&ie=UTF-8">
-    window.onerror
-  </a>
-</code></strong>, which works like this:
+**How can I register a global "uncaught exception" handler for javascript in the browser?**
+
+<a href="http://nodejs.org/api/process.html#process_event_uncaughtexception">
+**In node it's simple**</a>,
+in the browser, all you have is
+<a href="http://webcache.googleusercontent.com/search?q=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&oq=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&aqs=chrome..69i57j69i58.3391j0j4&sourceid=chrome&espv=210&es_sm=91&ie=UTF-8">
+**`window.onerror`**</a>... which works like this:
 
 ```javascript
 window.onerror = function(message, url, lineNo) {
-  // Script with error was hosted on a different domain, the message is just "Script error." with no line number or url!
+  // If failing script was hosted on a different domain, the message is just "Script error." with no line number or url!
 }
 ```
 
-But don't forget, we have the `try-catch-finally` block!
+Butt wait! We have the `try-catch-finally` block!
 
 Problem: How can I catch all errors and send them to one function?
 Solution: Write a library, establish a backwards-compatible standard, and encourage all javascript libraries to add a
@@ -27,7 +23,8 @@ try-catch block, and send exceptions they catch to `window.onuncaughtException`
 I have a solution in progress that helps you re-define library functions and catch their errors:
 http://Github.com/devinrhode2/shield.js
 
-Most people will want to fire an `uncaughtException`, without a library, like this:
+Most people will want to just send uncaught exceptions to a
+`window.onuncaughtException` function, without a library, like this:
 ```javascript
 try {
   // javascript
@@ -44,8 +41,8 @@ Maybe even skip the `if` check!
 ```javascript
 try {
   // javascript
-} catch (uncaughtException) {
-  onuncaughtException(uncaughtException);
+} catch (e) {
+  window.onuncaughtException(e);
 }
 ```
 
