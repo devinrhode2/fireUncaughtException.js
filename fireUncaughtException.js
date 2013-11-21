@@ -1,10 +1,10 @@
 /*!
- * fireUncaughtExcepton.js - Catch exceptions and send them to window.onuncaughtException(e).
+ * fireUncaughtException.js - Catch exceptions and send them to window.onuncaughtException(e).
  * fireUncaughtException(e) is just a more robust way of calling this function
  *
- * github.com/devinrhode2/fireUncaughtExcepton.js
+ * github.com/devinrhode2/fireUncaughtException.js
  *
- * Copyright (c) 2013 fireUncaughtExcepton.js contributors
+ * Copyright (c) 2013 fireUncaughtException.js contributors
  * MIT Licensed
  */
 
@@ -12,7 +12,7 @@
 // not even for var window = this; because this code is only for the browser
 
 // Closure Compiler will rename this function. With proper source-mapping, you can
-function fireUncaughtExcepton(uncaughtException) {
+function fireUncaughtException(uncaughtException) {
   // uncaughtException's just handed over to onuncaughtException.
   try {
     return onuncaughtException(uncaughtException);
@@ -42,16 +42,17 @@ function fireUncaughtExcepton(uncaughtException) {
 
   } // catch exceptionCallingOnUncaughtException
 }
-window['fireUncaughtExcepton'] = fireUncaughtExcepton;
+window['fireUncaughtException'] = fireUncaughtException;
 
 window['exceptionalException'] = function(message) {
   //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially here.
 
+  var undefined; // If also needed in fireUncaughtException, create a wrapper function that does var undefined; in one place
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
 
   // Define the actual core function: (INITIALIZATION BELOW)
-  window.exceptionalException = function(message) {
+  function exceptionalException(message) {
     // Make sure the message is a string, lodash style (search "function isString" in lodash.compat.js)
     if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) {
       // Ensure stack property is computed, or alias Opera 10's stacktrace property to it
@@ -112,31 +113,36 @@ window['exceptionalException'] = function(message) {
           return 'User does not want to email errors.';
         }
 
-        throw 'crashing thread to clear resources';
+        throw 'crashing thread to clear resources'; // I DUNNO
       }, 100);
     })(lastMessageReceived);
-  };
+  }
 
   // ## Initialization:
 
   // Alias:
-  var ee = window.exceptionalException;
-  ee.emailPreface || (
-    ee.emailPreface =
-      'Email error? We had a serious error and were not able to report it. ' +
-      'Press "OK" to send this email from your mail application. '
-  );
-  ee.email || (
+  var ee = exceptionalException;
+
+  // gee stands for "Global Exceptional Exception"
+  var gee = window['exceptionalException'];
+
+  ee.emailPreface = gee.emailPreface || 'Email error? ' +
+    'We had a serious error and were not able to report it. ' +
+    'Press "OK" to send this email from your mail application. ';
+
+  if (gee.email !== undefined) {
+    ee.email = gee.email;
+  } else {
     // In these first 2 statements, ee.email becomes the domain name
     ee.email = location.hostname.split('.'),
     ee.email = ee.email[ee.email.length - 2] + '.' +
                ee.email[ee.email.length - 1],
-    ee.email = 'support@' + ee.email + ',engineering+unrecordedJavaScriptError@' + ee.email
-  );
+    ee.email = 'support@' + ee.email + ',engineering+unrecordedJavaScriptError@' + ee.email;
+  }
 
-  ee.mailtoParams || (ee.mailtoParams = {});
-  ee.mailtoParams.subject || (ee.mailtoParams.subject = 'Automatic error report failed, it\'s included here.');
-  ee.mailtoParams.body    || (ee.mailtoParams.body    = 'I found some javascript errors, they are listed below:');
+  ee.mailtoParams         = gee.mailtoParams || {};
+  ee.mailtoParams.subject = gee.mailtoParams.subject || 'Automatic error report failed, it\'s included here.';
+  ee.mailtoParams.body    = gee.mailtoParams.body    || 'I found some javascript errors, they are listed below:';
 
   function stringifyError(hash) {
     var result = '';
@@ -145,8 +151,9 @@ window['exceptionalException'] = function(message) {
     }
     return result;
   }
-  ee.stringifyError || (ee.stringifyError = stringifyError);
+  ee.stringifyError = gee.stringifyError || stringifyError;
 
+  window['exceptionalException'] = exceptionalException;
 
   // Start!
   // Now that we have our initialization done and state variables defined, let it roll
