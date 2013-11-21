@@ -53,7 +53,7 @@ try {
 ```
 
 If you really believe that the javascript community should have a way to register a global `uncaughtException`
-handler, you'll probably want to use this library.
+handler like I do, you'll probably want to use this library.
 
 # Usage:
 
@@ -65,22 +65,19 @@ try {
 }
 ```
 
-`sendUncaughtException` simply calls `onuncaughtException`, but if there's an exception
-calling `window.onuncaughtException`, we have an `exceptionalException`.
+`sendUncaughtException` simply calls `window.onuncaughtException` — but if there's an exception
+in doing so, we pass that exceptional exception to, well, `exceptionalException`.
 
 `exceptionalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
 and then creates an email report of the errors and asks the user if they are willing to send it with a `confirm` dialog.
 If they hit OK, a window for a `mailto` link with all the info pre-populated pops up.
 
-The `confirm` dialog is also a quick and convenient 
-You'll discover your own errors first via the `confirm` dialog,
-sparing you from opening the console.
+The `confirm` dialog also happens to be a quick and convenient way to discover your own errors.
 
-If you don't want to ask users to email errors, you can `noop` exceptionalException like this:
-```javascript
-window.exceptionalException = function(){};
-```
+If you want to do something else with string and non-string errors, consider not using this library,
+copying out just the `sendUncaughtException` function, or just redefining exceptionalException to something else.
 
+# Options
 exceptionalException adds properties onto itself as options.
 
 Options are:
@@ -94,7 +91,8 @@ Options are:
      Thanks!"
  - email: Email address to send errors to. Defaults to unrecordedJavaScriptError@{domain},support@{domain} (all subdomains are removed)
  - mailtoParams.subject: Subject of email
- - mailtoParams.body: Top of the email message
+ - mailtoParams.bodyStart: **TOP** of the email message, before the list of errors
+ - mailtoParams.bodyEnd: **END** of the email message, after the list
  - stringifyError: function used to turn input to exceptionalException into a string
      when it is not a string (exception or potentially something else..)
 
