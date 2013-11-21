@@ -1,5 +1,5 @@
 {
-  "name": "sendUncaughtException.js",
+  "name": "sendUncaughtException",
   "version": "0.1.0",
   "description": "Send exceptions to window.onuncaughtException with absolute certainty.",
   "homepage": "http://github.com/devinrhode2/sendUncaughtException.js",

@@ -27,8 +27,8 @@ function sendUncaughtException(uncaughtException) {
       exceptionalException(new Error([
         'Please define a window.onuncaughtException function.',
         'For example:',
-        '  window.onuncaughtException = function (uncaughtException) {',
-        '    //log uncaughtException.stack to your server',
+        '  window.onuncaughtException = function (exception) {',
+        '    // log uncaughtException.stack to your server',
         '  };'
       ].join('\n')));
     } else { // apparently `onuncaughtException` IS DEFINED...
@@ -109,8 +109,6 @@ window['exceptionalException'] = function(message) {
                     ee.mailtoParams.body);
             }
           }
-        } else {
-          return 'User does not want to email errors.';
         }
 
         throw 'crashing thread to clear resources'; // I DUNNO
