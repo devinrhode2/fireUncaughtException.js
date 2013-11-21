@@ -17,12 +17,17 @@ window.onerror = function(message, url, lineNo) {
 
 Butt wait! We have the `try-catch-finally` block!
 
-Problem: How can I catch all errors and send them to one function?
-Solution: Write a library, establish a backwards-compatible standard, and encourage all javascript libraries to add a
-try-catch block, and send exceptions they catch to `window.onuncaughtException`
+How do you catch all errors and send them to one function?
 
 I have a solution in progress that helps you re-define library functions and catch their errors:
 http://Github.com/devinrhode2/shield.js
+
+##### Vision
+I'd like to work with libraries to establish `window.onuncaughtException` as a standard, so you don't have to
+re-define their library function.
+
+Eventually I'm sure it will be very clear for browsers to also send exceptions to this same function,
+but perhaps as a `window` event like `load`.
 
 Most people will want to just send uncaught exceptions to a
 `window.onuncaughtException` function, without a library, like this:
@@ -79,7 +84,6 @@ window.exceptionalException = function(){};
 exceptionalException adds properties onto itself as options.
 
 Options are:
- - emailErrors: boolean. Defaults to asking the user the confirmDialogMessage for emailing errors or not.
  - emailPreface: Defaults to:
 =====
     "Email error?
