@@ -1,15 +1,15 @@
 {
-  "name": "fireUncaughtException.js",
+  "name": "sendUncaughtException.js",
   "version": "0.1.0",
   "description": "Send exceptions to window.onuncaughtException with absolute certainty.",
-  "homepage": "http://github.com/devinrhode2/fireUncaughtException.js",
+  "homepage": "http://github.com/devinrhode2/sendUncaughtException.js",
   "license": "MIT",
-  "main": "fireUncaughtException.js",
+  "main": "sendUncaughtException.js",
   "keywords": ["uncaughtException", "browser", "client", "error", "onerror", "server", "util", "window.onerror"],
   "author": "Devin Rhode <devinrhode2@gmail.com> (http://twitter.com/devinrhode2/)",
   "contributors": [
     "Devin Rhode <devinrhode2@gmail.com> (http://twitter.com/devinrhode2)"
   ],
-  "bugs": "https://github.com/devinrhode2/fireUncaughtException.js/issues",
-  "repository": { "type": "git", "url": "https://github.com/devinrhode2/fireUncaughtException.js.git" }
+  "bugs": "https://github.com/devinrhode2/sendUncaughtException.js/issues",
+  "repository": { "type": "git", "url": "https://github.com/devinrhode2/sendUncaughtException.js.git" }
 }

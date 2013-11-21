@@ -53,18 +53,18 @@ That's where _this_ library comes in. It barks at the developer for you, and ask
 if they would like to email the error to you (via `window.open('mailto:`).
 
 Now, if you do not ever want to re-`throw` the exception, and are set on sending the exception to an
-`oncaughtException` function, use `fireUncaughtExcepton`:
+`oncaughtException` function, use `sendUncaughtException`:
 
 Usage:
 ```javascript
 try {
   //code...
 } catch (uncaughtException) {
-  fireUncaughtExcepton(uncaughtException);
+  sendUncaughtException(uncaughtException);
 }
 ```
 
-`fireUncaughtExcepton` simply calls `onuncaughtException`, but if an exception occurs in doing so, it
+`sendUncaughtException` simply calls `onuncaughtException`, but if an exception occurs in doing so, it
 first checks if it's defined as a function. If it is, then we have an `exceptionalException`, which
 creates a `confirm` dialog listing all the errors, asking the user if they would be willing to **email**
 the error to support@domain.com, "because we failed to report it". Instead of a using a confirm alert

@@ -1,10 +1,10 @@
 /*!
- * fireUncaughtException.js - Catch exceptions and send them to window.onuncaughtException(e).
- * fireUncaughtException(e) is just a more robust way of calling this function
+ * sendUncaughtException.js - Catch exceptions and send them to window.onuncaughtException(e).
+ * sendUncaughtException(e) is just a more robust way of calling this function
  *
- * github.com/devinrhode2/fireUncaughtException.js
+ * github.com/devinrhode2/sendUncaughtException.js
  *
- * Copyright (c) 2013 fireUncaughtException.js contributors
+ * Copyright (c) 2013 sendUncaughtException.js contributors
  * MIT Licensed
  */
 
@@ -12,7 +12,7 @@
 // not even for var window = this; because this code is only for the browser
 
 // Closure Compiler will rename this function. With proper source-mapping, you can
-function fireUncaughtException(uncaughtException) {
+function sendUncaughtException(uncaughtException) {
   // uncaughtException's just handed over to onuncaughtException.
   try {
     return onuncaughtException(uncaughtException);
@@ -42,12 +42,12 @@ function fireUncaughtException(uncaughtException) {
 
   } // catch exceptionCallingOnUncaughtException
 }
-window['fireUncaughtException'] = fireUncaughtException;
+window['sendUncaughtException'] = sendUncaughtException;
 
 window['exceptionalException'] = function(message) {
   //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially here.
 
-  var undefined; // If also needed in fireUncaughtException, create a wrapper function that does var undefined; in one place
+  var undefined; // If also needed in sendUncaughtException, create a wrapper function that does var undefined; in one place
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
 
