@@ -5,11 +5,26 @@
   "homepage": "http://github.com/devinrhode2/sendUncaughtException.js",
   "license": "MIT",
   "main": "sendUncaughtException.js",
-  "keywords": ["uncaughtException", "browser", "client", "error", "onerror", "server", "util", "window.onerror"],
+  "keywords": [
+    "uncaughtException",
+    "browser",
+    "client",
+    "error",
+    "onerror",
+    "server",
+    "util",
+    "window.onerror"
+  ],
   "author": "Devin Rhode <devinrhode2@gmail.com> (http://twitter.com/devinrhode2/)",
   "contributors": [
     "Devin Rhode <devinrhode2@gmail.com> (http://twitter.com/devinrhode2)"
   ],
   "bugs": "https://github.com/devinrhode2/sendUncaughtException.js/issues",
-  "repository": { "type": "git", "url": "https://github.com/devinrhode2/sendUncaughtException.js.git" }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devinrhode2/sendUncaughtException.js.git"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1"
+  }
 }

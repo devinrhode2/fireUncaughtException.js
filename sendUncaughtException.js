@@ -11,11 +11,14 @@
 // No (function(){ .. wrapper because there are no shared variables,
 // not even for var window = this; because this code is only for the browser
 
-// Closure Compiler will rename this function. With proper source-mapping, you can
-function sendUncaughtException(uncaughtException) {
-  // uncaughtException's just handed over to onuncaughtException.
+// Closure Compiler will rename this function. With proper source-maps, this can be unraveled
+function sendUncaughtException(exception) {
+  // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
+  exception.stack || (exception.stack = exception.stacktrace);
+
+  // Hand uncaught exception over to onuncaughtException:
   try {
-    return onuncaughtException(uncaughtException);
+    return onuncaughtException(exception);
     // return is included to be as transparent as possible,
     // it makes new interesting use cases and patterns possible (which are yet to be known)
     // It may also be good for clearing resources..
@@ -28,7 +31,7 @@ function sendUncaughtException(uncaughtException) {
         'Please define a window.onuncaughtException function.',
         'For example:',
         '  window.onuncaughtException = function (exception) {',
-        '    // log uncaughtException.stack to your server',
+        '    // log exception.stack to your server',
         '  };'
       ].join('\n')));
     } else { // apparently `onuncaughtException` IS DEFINED...
@@ -38,7 +41,7 @@ function sendUncaughtException(uncaughtException) {
         exceptionalException(exceptionCallingOnUncaughtException);
       }
     }
-    exceptionalException(uncaughtException);
+    exceptionalException(exception);
 
   } // catch exceptionCallingOnUncaughtException
 }
@@ -55,13 +58,11 @@ window['exceptionalException'] = function(message) {
   function exceptionalException(message) {
     // Make sure the message is a string, lodash style (search "function isString" in lodash.compat.js)
     if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) {
-      // Ensure stack property is computed, or alias Opera 10's stacktrace property to it
-      message.stack || (message.stack = message.stacktrace);
       message = ee.stringifyError(message);
     }
 
     // Add the message to the email body.
-    ee.mailtoParams.body += '\n\n' + message;
+    ee.mailtoParams.bodyStart += '\n\n' + message;
 
     // Mark message as received.
     if (receivedErrorMessages[message]) return 'already received this error message';
@@ -73,7 +74,7 @@ window['exceptionalException'] = function(message) {
       setTimeout(function(){
         if (lastMessageReceived !== lastMessageAtStartOfTimeout) return; //bail and try sending on next timeout
 
-        ee.mailtoParams.body += '\n\nSincerely, person';
+        ee.mailtoParams.bodyStart += '\n\n' + ee.mailtoParams.bodyEnd;
 
         var finalUrl = message; //re-use message variable under alias
         finalUrl = 'mailto:' + ee.email + '?';
@@ -91,7 +92,7 @@ window['exceptionalException'] = function(message) {
           ee.emailPreface + '\n',
           'To:' + ee.mailtoParams.email,
           'Subject:' + ee.mailtoParams.subject,
-          ee.mailtoParams.body
+          ee.mailtoParams.bodyStart
         ].join('\n'))) {
 
           // If loading the mailto link via popup fails...
@@ -106,7 +107,7 @@ window['exceptionalException'] = function(message) {
               alert('System failed to redirect to compose email. ' +
                     'Email is shown below to copy and paste:\n\n' +
                     ee.mailtoParams.subject + '\n\n' +
-                    ee.mailtoParams.body);
+                    ee.mailtoParams.bodyStart);
             }
           }
         }
@@ -124,32 +125,35 @@ window['exceptionalException'] = function(message) {
   // gee stands for "Global Exceptional Exception"
   var gee = window['exceptionalException'];
 
-  ee.emailPreface = gee.emailPreface || 'Email error? ' +
-    'We had a serious error and were not able to report it. ' +
-    'Press "OK" to send this email from your mail application. ';
-
-  if (gee.email !== undefined) {
-    ee.email = gee.email;
-  } else {
-    // In these first 2 statements, ee.email becomes the domain name
-    ee.email = location.hostname.split('.'),
-    ee.email = ee.email[ee.email.length - 2] + '.' +
-               ee.email[ee.email.length - 1],
-    ee.email = 'support@' + ee.email + ',engineering+unrecordedJavaScriptError@' + ee.email;
-  }
-
-  ee.mailtoParams         = gee.mailtoParams || {};
-  ee.mailtoParams.subject = gee.mailtoParams.subject || 'Automatic error report failed, it\'s included here.';
-  ee.mailtoParams.body    = gee.mailtoParams.body    || 'I found some javascript errors, they are listed below:';
-
-  function stringifyError(hash) {
-    var result = '';
-    for (var key in hash) {
-      result += key + ':\n  ' + hash[key] + '\n';
+  var defaultOptions = {
+    emailPreface: 'Email error? ' +
+      'We had a serious error and were not able to report it. ' +
+      'Press "OK" to send this email from your mail application. ',
+    emailSubject: 'Manual error report (automatic one failed)',
+    emailStart: 'I found some javascript errors, they are listed below:',
+    emailEnd: 'Hope this helps.'
+    stringifyError: function (hash) {
+      var result = '';
+      for (var key in hash) {
+        result += key + ':\n  ' + hash[key] + '\n';
+      }
+      return result;
     }
-    return result;
+  };
+
+  for (var option in defaultOptions) {
+    ee[option] = gee[option] || defaultOptions[option];
   }
-  ee.stringifyError = gee.stringifyError || stringifyError;
+
+  if (gee.emailAddress !== undefined) {
+    ee.emailAddress = gee.emailAddress;
+  } else {
+    // In these first 2 statements, ee.emailAddress becomes the domain name
+    ee.emailAddress = location.hostname.split('.'),
+    ee.emailAddress = ee.emailAddress[ee.emailAddress.length - 2] + '.' +
+               ee.emailAddress[ee.emailAddress.length - 1],
+    ee.emailAddress = 'support@' + ee.emailAddress + ',engineering+unrecordedJavaScriptError@' + ee.emailAddress;
+  }
 
   window['exceptionalException'] = exceptionalException;
 
