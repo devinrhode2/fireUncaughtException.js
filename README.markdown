@@ -11,7 +11,7 @@ In the browser, all you have is
 ```javascript
 window.onerror = function(message, url, lineNo) {
   // If failing script was hosted on a different domain, the message is just "Script error."
-  // No line number or url!
+  // with no line number or url!
 }
 ```
 
