@@ -3,8 +3,8 @@
 **How can I register a global "uncaught exception" handler for javascript in the browser?**
 
 <a href="http://nodejs.org/api/process.html#process_event_uncaughtexception">
-**In node it's simple**</a>,
-in the browser, all you have is
+**In node it's simple.**</a>,
+In the browser, all you have is
 <a href="http://webcache.googleusercontent.com/search?q=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&oq=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&aqs=chrome..69i57j69i58.3391j0j4&sourceid=chrome&espv=210&es_sm=91&ie=UTF-8">
 **`window.onerror`**</a>... which works like this:
 
@@ -15,7 +15,7 @@ window.onerror = function(message, url, lineNo) {
 }
 ```
 
-Butt wait! We have the `try-catch-finally` block!
+No stack trace here. For that we need a `try-catch` block.
 
 How do you catch all errors and send them to one function?
 
