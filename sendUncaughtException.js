@@ -97,10 +97,7 @@
                    null,
                    // arg string taken from twitters tweet button
                    'scrollbars=yes,resizable=yes,toolbar=no,location=yes,width=550,height=420,left=445,top=240')) {
-              alert('Email application failed to open.' +
-                    'Email is shown below to copy and paste:\n\n' +
-                    ee.mailtoParams.subject + '\n\n' +
-                    ee.mailtoParams.body);
+              // Just let it be.
             }
           }
 
