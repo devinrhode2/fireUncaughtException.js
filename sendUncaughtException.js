@@ -22,27 +22,28 @@
       // It may also be good for clearing resources..
 
       // I use this try-catch structure instead of several if checks for efficiency
-    } catch (exceptionalException) {
+    } catch (exceptionCallingOnUncaughtException) {
 
       // Attempt to give an Error with more clarity:
       if (window.onuncaughtException === undefined) {
-        exceptionalException = new Error([
+        exceptionCallingOnUncaughtException = [
           'onuncaughtException is undefined.',
           'Please define one; like this for example:',
           '  window.onuncaughtException = function (exception) {',
           '    // log exception.stack to your server',
           '  };'
-        ].join('\n'));
+        ].join('\n');
       }
 
       // Using ['prop'] to prevent Closure Compiler advanced mode from re-naming it
-      clearTimeout(sendUncaughtException['exceptionalException'](exceptionalException));
-                   sendUncaughtException['exceptionalException'](exception, 100);
+      clearTimeout(exceptionalException(exceptionCallingOnUncaughtException));
+                   exceptionalException(exception, 100);
 
-    } // catch exceptionCallingOnUncaughtException
+    }
   }
+  window['sendUncaughtException'] = sendUncaughtException;
 
-  sendUncaughtException['exceptionalException'] = function(message) {
+  window['exceptionalException'] = function(message) {
     //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially here.
 
     var receivedErrorMessages = {};
@@ -113,8 +114,8 @@
     // Alias:
     var ee = exceptionalException;
 
-    // gee stands for "Global Exceptional Exception", because it's the globally exposed object that someone sets options on
-    var gee = sendUncaughtException['exceptionalException'];
+    // gee stands for "Global Exceptional Exception"
+    var gee = window['exceptionalException'];
 
     var defaultOptions = {
       emailAddress:            'support@' + location.hostname +
@@ -141,6 +142,8 @@
         });
 
         However, it ends up adding like 4 extra function calls to the stack frame..
+        we could increase the number of stack frames given in stack traces in chrome.
+        Also, we'd have to do this to every error type, (TypeError, ReferenceError, etc) and
         */
         var result = '';
         for (var key in hash) {
@@ -161,11 +164,10 @@
     ee.mailtoParams.subject || (ee.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
     ee.mailtoParams.body    || (ee.mailtoParams.body    = 'Errors listed below:');
 
-    sendUncaughtException['exceptionalException'] = exceptionalException;
+    window['exceptionalException'] = exceptionalException;
 
     // Start!
     return exceptionalException(message);
   };
 
-  window['sendUncaughtException'] = sendUncaughtException;
 })();
