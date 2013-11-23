@@ -8,8 +8,9 @@
  * MIT Licensed
  */
 
-// No (function(){ .. wrapper because there are no shared variables,
-// not even for var window = this; because this code is only for the browser
+
+(function(){
+  var undefined;
 
 // Closure Compiler will rename this function. With proper source-maps, this can be unraveled
 function sendUncaughtException(exception) {
@@ -18,51 +19,47 @@ function sendUncaughtException(exception) {
 
   // Hand uncaught exception over to onuncaughtException:
   try {
-    return onuncaughtException(exception);
+    return window.onuncaughtException(exception);
     // return is included to be as transparent as possible,
     // it makes new interesting use cases and patterns possible (which are yet to be known)
     // It may also be good for clearing resources..
 
     // I use this try-catch structure instead of several if checks for efficiency
-  } catch (exceptionCallingOnUncaughtException) { // what a gnarly exception..!
+  } catch (exceptionalException) {
 
-    if (typeof onuncaughtException === 'undefined') {
-      exceptionalException(new Error([
-        'Please define a window.onuncaughtException function.',
-        'For example:',
+    // Attempt to give an Error with more clarity:
+    if (window.onuncaughtException === undefined) {
+      exceptionalException = new Error([
+        'onuncaughtException is undefined.',
+        'Please define one; like this for example:',
         '  window.onuncaughtException = function (exception) {',
         '    // log exception.stack to your server',
         '  };'
-      ].join('\n')));
-    } else { // apparently `onuncaughtException` IS DEFINED...
-      if (Object.prototype.toString.call(onuncaughtException) != '[object Function]') {
-        exceptionalException(new TypeError('onuncaughtException is not a function'));
-      } else {
-        exceptionalException(exceptionCallingOnUncaughtException);
-      }
+      ].join('\n'));
     }
-    exceptionalException(exception);
+
+    clearTimeout(sendUncaughtException.exceptionalException(exceptionalException));
+    sendUncaughtException.exceptionalException(exception, 100);
 
   } // catch exceptionCallingOnUncaughtException
 }
-window['sendUncaughtException'] = sendUncaughtException;
 
-window['exceptionalException'] = function(message) {
+// Using ['prop'] to prevent Closure Compiler advanced mode from re-naming it
+sendUncaughtException['exceptionalException'] = function(message) {
   //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially here.
 
-  var undefined; // If also needed in sendUncaughtException, create a wrapper function that does var undefined; in one place
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
 
   // Define the actual core function: (INITIALIZATION BELOW)
-  function exceptionalException(message) {
+  function exceptionalException(message, msToWaitForMoreExceptions) {
     // Make sure the message is a string, lodash style (search "function isString" in lodash.compat.js)
     if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) {
       message = ee.stringifyError(message);
     }
 
     // Add the message to the email body.
-    ee.mailtoParams.bodyStart += '\n\n' + message;
+    ee.mailtoParams.body += '\n\n' + message;
 
     // Mark message as received.
     if (receivedErrorMessages[message]) return 'already received this error message';
@@ -70,13 +67,15 @@ window['exceptionalException'] = function(message) {
     lastMessageReceived = message;
 
     // Get a snapshot of the lastMessageReceived at the start of the timeout by using a closure
-    (function(lastMessageAtStartOfTimeout){
-      setTimeout(function(){
+    (function(){
+      var lastMessageAtStartOfTimeout = lastMessageReceived;
+      // the return allows you to clearTimeout if you know you have another exceptional exception coming
+      return setTimeout(function(){
         if (lastMessageReceived !== lastMessageAtStartOfTimeout) return; //bail and try sending on next timeout
 
-        ee.mailtoParams.bodyStart += '\n\n' + ee.mailtoParams.bodyEnd;
+        ee.mailtoParams.body += '\n\n' + ee.bodyEnd;
 
-        var finalUrl = message; //re-use message variable under alias
+        var finalUrl = message; //re-use message variable under alias to conserve memory
         finalUrl = 'mailto:' + ee.email + '?';
 
         // mailtoParams needs to be turned into a querystring parameters and appended to finalUrl
@@ -90,9 +89,9 @@ window['exceptionalException'] = function(message) {
         // let's ask the user if they are willing to:
         if (confirm([
           ee.emailPreface + '\n',
-          'To:' + ee.mailtoParams.email,
+          'To:' + ee.emailAddress,
           'Subject:' + ee.mailtoParams.subject,
-          ee.mailtoParams.bodyStart
+          ee.mailtoParams.body
         ].join('\n'))) {
 
           // If loading the mailto link via popup fails...
@@ -101,37 +100,37 @@ window['exceptionalException'] = function(message) {
                  null,
                  // arg string taken from twitters tweet button
                  'scrollbars=yes,resizable=yes,toolbar=no,location=yes,width=550,height=420,left=445,top=240')) {
-            // we will just do a redirect to compose the email
-            location.href = finalUrl;
-            if (location.href !== finalUrl) {
-              alert('System failed to redirect to compose email. ' +
-                    'Email is shown below to copy and paste:\n\n' +
-                    ee.mailtoParams.subject + '\n\n' +
-                    ee.mailtoParams.bodyStart);
-            }
+            alert('Email application failed to open.' +
+                  'Email is shown below to copy and paste:\n\n' +
+                  ee.mailtoParams.subject + '\n\n' +
+                  ee.mailtoParams.body);
           }
         }
 
-        throw 'crashing thread to clear resources'; // I DUNNO
-      }, 100);
-    })(lastMessageReceived);
+        //throw 'crashing thread to clear resources??'
+      }, msToWaitForMoreExceptions || 34); // Wait for 2 frames by default: (1000/60) * 2 = 33.3...
+    })();
   }
 
-  // ## Initialization:
+  // # INITIALIZATION:
 
   // Alias:
   var ee = exceptionalException;
 
-  // gee stands for "Global Exceptional Exception"
-  var gee = window['exceptionalException'];
+  // gee stands for "Global Exceptional Exception", because it's the globally exposed object that someone sets options on
+  var gee = sendUncaughtException['exceptionalException'];
 
   var defaultOptions = {
     emailPreface: 'Email error? ' +
       'We had a serious error and were not able to report it. ' +
-      'Press "OK" to send this email from your mail application. ',
-    emailSubject: 'Manual error report (automatic one failed)',
-    emailStart: 'I found some javascript errors, they are listed below:',
-    emailEnd: 'Hope this helps.'
+      'Pressing "OK" will open up your default email application to send this email:',
+    emailAddress:                  'support@' + location.hostname +
+    ',engineering+unrecordedJavaScriptError@' + location.hostname,
+    mailtoParams: {
+      subject: 'Automatic error reporting failed, here\'s why',
+      body: 'I found some errors, they are listed below:'
+    },
+    bodyEnd: 'Hope this helps.',
     stringifyError: function (hash) {
       var result = '';
       for (var key in hash) {
@@ -141,23 +140,22 @@ window['exceptionalException'] = function(message) {
     }
   };
 
+  // copy over options from window['exceptionalException'] to exceptionalException, falling back to defaults.
   for (var option in defaultOptions) {
-    ee[option] = gee[option] || defaultOptions[option];
+    if (defaultOptions.hasOwnProperty(option)) {
+      ee[option] = gee[option] || defaultOptions[option];
+    }
   }
 
-  if (gee.emailAddress !== undefined) {
-    ee.emailAddress = gee.emailAddress;
-  } else {
-    // In these first 2 statements, ee.emailAddress becomes the domain name
-    ee.emailAddress = location.hostname.split('.'),
-    ee.emailAddress = ee.emailAddress[ee.emailAddress.length - 2] + '.' +
-               ee.emailAddress[ee.emailAddress.length - 1],
-    ee.emailAddress = 'support@' + ee.emailAddress + ',engineering+unrecordedJavaScriptError@' + ee.emailAddress;
-  }
+  // if gee.mailtoParams was instead of the default mailtoParams, ensure we still have a subject + body
+  ee.mailtoParams.subject || (ee.mailtoParams.subject = defaultOptions.mailtoParams.subject);
+  ee.mailtoParams.body    || (ee.mailtoParams.body    = defaultOptions.mailtoParams.body);
 
-  window['exceptionalException'] = exceptionalException;
+  sendUncaughtException['exceptionalException'] = exceptionalException;
 
   // Start!
-  // Now that we have our initialization done and state variables defined, let it roll
   return exceptionalException(message);
 };
+
+window['sendUncaughtException'] = sendUncaughtException;
+})();
