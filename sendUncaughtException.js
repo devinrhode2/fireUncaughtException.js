@@ -8,7 +8,7 @@
  * MIT Licensed
  */
 (function(){
-  var undefined;
+  var undefined; // safe reference to undefined
 
   function sendUncaughtException(exception) {
     // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
@@ -35,13 +35,13 @@
         ].join('\n'));
       }
 
-      clearTimeout(sendUncaughtException.exceptionalException(exceptionalException));
-      sendUncaughtException.exceptionalException(exception, 100);
+      // Using ['prop'] to prevent Closure Compiler advanced mode from re-naming it
+      clearTimeout(sendUncaughtException['exceptionalException'](exceptionalException));
+                   sendUncaughtException['exceptionalException'](exception, 100);
 
     } // catch exceptionCallingOnUncaughtException
   }
 
-  // Using ['prop'] to prevent Closure Compiler advanced mode from re-naming it
   sendUncaughtException['exceptionalException'] = function(message) {
     //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially here.
 
@@ -82,12 +82,12 @@
 
           // We have the error report containing all errors setup and are ready to send it,
           // let's ask the user if they are willing to:
-          if (confirm(emailPreface + '\n\n' + emailPreview)) {
+          if (confirm(ee.emailPreface + '\n\n' + emailPreview)) {
 
-            var finalUrl = message; //re-use message variable under alias to conserve memory
-            finalUrl = 'mailto:' + ee.email + '?';
+            var finalUrl = message; //re-use message variable to conserve memory
+            finalUrl = 'mailto:' + ee.emailAddress + '?';
 
-            // mailtoParams needs to be turned into a querystring parameters and appended to finalUrl
+            // mailtoParams need to be turned into a querystring and appended to finalUrl
             for (var param in ee.mailtoParams) {
               if (ee.mailtoParams.hasOwnProperty(param)) {
                 finalUrl += param + '=' + encodeURIComponent(ee.mailtoParams) + '&';
@@ -99,10 +99,7 @@
                    null,
                    // arg string taken from twitters tweet button
                    'scrollbars=yes,resizable=yes,toolbar=no,location=yes,width=550,height=420,left=445,top=240')) {
-              setTimeout(function(){
-                alert('Email dialog failed to open. Error report is shown below' +
-                      ' to copy and send by other means:\n\n' + emailPreview);
-              }, 4000)
+              // Just let it be.
             }
           }
 
@@ -120,14 +117,31 @@
     var gee = sendUncaughtException['exceptionalException'];
 
     var defaultOptions = {
-      emailAddress:                  'support@' + location.hostname +
-      ',engineering+unrecordedJavaScriptError@' + location.hostname,
-      emailPreface: 'Email error? ' +
+      emailAddress:            'support@' + location.hostname +
+      ', engineering+exceptionalJSError@' + location.hostname,
+      emailPreface: 'EMAIL ERROR? \n\n' +
         'We had a serious error and were not able to report it. \n\n' +
         'Pressing "OK" will open up your default email application to send this email:',
-      mailtoParams: {/*default subject and body (start) set below*/},
+      mailtoParams: {/*
+        subject: See default below.
+        body: Start of the email. See default below.
+        cc: Feel free to add cc and bcc properties
+      */},
       bodyEnd: 'Hope this helps.',
+
+      // stringifyError is globally exposed for other libraries to use
       stringifyError: function (hash) {
+        // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
+        hash.stack || (hash.stack = hash.stacktrace);
+        /* Interesting hack to always have a computed stack property:
+        extendFunction('Error', function(args, oldError) {
+          var ret = oldError.apply(window, args);
+          ret.stack || (ret.stack = ret.stacktrace);
+          return ret;
+        });
+
+        However, it ends up adding like 4 extra function calls to the stack frame..
+        */
         var result = '';
         for (var key in hash) {
           result += key + ':\n  ' + hash[key] + '\n';
@@ -145,7 +159,7 @@
 
     // Ensure we still have a subject + body in case gee.mailtoParams was used instead of the default mailtoParams
     ee.mailtoParams.subject || (ee.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
-    ee.mailtoParams.body    || (ee.mailtoParams.body    = 'I found some errors, they are listed below:');
+    ee.mailtoParams.body    || (ee.mailtoParams.body    = 'Errors listed below:');
 
     sendUncaughtException['exceptionalException'] = exceptionalException;
 
