@@ -7,12 +7,9 @@
  * Copyright (c) 2013 sendUncaughtException.js contributors
  * MIT Licensed
  */
-
-
 (function(){
   var undefined;
 
-  // Closure Compiler will rename this function. With proper source-maps, this can be unraveled
   function sendUncaughtException(exception) {
     // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
     exception.stack || (exception.stack = exception.stacktrace);
