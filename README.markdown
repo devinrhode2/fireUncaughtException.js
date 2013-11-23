@@ -97,7 +97,9 @@ try {
 }
 ```
 
-Enjoy! Please file issues and/or give me direct feedback to my same username @gmail.com
+Enjoy**! Please file issues and/or give me direct feedback to my same username @gmail.com
 
 
 *Except in the latest chrome, which gives you the exception object as the 5th parameter to `window.onerror`
+
+**Could be quite painful to start because I'm finishing some debugging and adding testing.
