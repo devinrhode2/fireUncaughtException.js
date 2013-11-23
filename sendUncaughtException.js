@@ -72,32 +72,37 @@
 
           ee.mailtoParams.body += '\n\n' + ee.bodyEnd;
 
-          var finalUrl = message; //re-use message variable under alias to conserve memory
-          finalUrl = 'mailto:' + ee.email + '?';
+          var emailPreview = ee.bodyEnd; //re-use variable to conserve memory
 
-          // mailtoParams needs to be turned into a querystring parameters and appended to finalUrl
-          for (var param in ee.mailtoParams) {
-            if (ee.mailtoParams.hasOwnProperty(param)) {
-              finalUrl += param + '=' + encodeURIComponent(ee.mailtoParams) + '&';
-            }
-          }
+          emailPreview = [
+            'To:'      + ee.emailAddress,
+            'Subject:' + ee.mailtoParams.subject,
+                         ee.mailtoParams.body
+          ].join('\n');
 
           // We have the error report containing all errors setup and are ready to send it,
           // let's ask the user if they are willing to:
-          if (confirm([
-            ee.emailPreface + '\n',
-            'To:' + ee.emailAddress,
-            'Subject:' + ee.mailtoParams.subject,
-            ee.mailtoParams.body
-          ].join('\n'))) {
+          if (confirm(emailPreface + '\n\n' + emailPreview)) {
 
-            // If loading the mailto link via popup fails...
+            var finalUrl = message; //re-use message variable under alias to conserve memory
+            finalUrl = 'mailto:' + ee.email + '?';
+
+            // mailtoParams needs to be turned into a querystring parameters and appended to finalUrl
+            for (var param in ee.mailtoParams) {
+              if (ee.mailtoParams.hasOwnProperty(param)) {
+                finalUrl += param + '=' + encodeURIComponent(ee.mailtoParams) + '&';
+              }
+            }
+
             if (!window.open(
                    finalUrl,
                    null,
                    // arg string taken from twitters tweet button
                    'scrollbars=yes,resizable=yes,toolbar=no,location=yes,width=550,height=420,left=445,top=240')) {
-              // Just let it be.
+              setTimeout(function(){
+                alert('Email dialog failed to open. Error report is shown below' +
+                      ' to copy and send by other means:\n\n' + emailPreview);
+              }, 4000)
             }
           }
 
