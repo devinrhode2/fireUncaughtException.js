@@ -97,6 +97,14 @@ try {
 }
 ```
 
+By default `exceptionalException` will wait 34 milliseconds for other errors to reel in, you can set this to
+0 or any other time my passing in the number as the second parameter to `exceptionalException`. For example:
+```javascript
+sendUncaughtException.exceptionalException('failed to load jQuery.', 5000); // wait for other load failures
+```
+Futhermore, `exceptionalException` returns the timer setTimeout, allowing you to `clearTimeout` if you know you're
+going to call `exceptionalException` again very shortly.
+
 Enjoy**! Please file issues and/or give me direct feedback to my same username @gmail.com
 
 
