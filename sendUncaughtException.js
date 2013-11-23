@@ -121,15 +121,12 @@
     var gee = sendUncaughtException['exceptionalException'];
 
     var defaultOptions = {
-      emailPreface: 'Email error? ' +
-        'We had a serious error and were not able to report it. ' +
-        'Pressing "OK" will open up your default email application to send this email:',
       emailAddress:                  'support@' + location.hostname +
       ',engineering+unrecordedJavaScriptError@' + location.hostname,
-      mailtoParams: {
-        subject: 'Automatic error reporting failed, here\'s why',
-        body: 'I found some errors, they are listed below:'
-      },
+      emailPreface: 'Email error? ' +
+        'We had a serious error and were not able to report it. \n\n' +
+        'Pressing "OK" will open up your default email application to send this email:',
+      mailtoParams: {/*default subject and body (start) set below*/},
       bodyEnd: 'Hope this helps.',
       stringifyError: function (hash) {
         var result = '';
@@ -147,9 +144,9 @@
       }
     }
 
-    // if gee.mailtoParams was instead of the default mailtoParams, ensure we still have a subject + body
-    ee.mailtoParams.subject || (ee.mailtoParams.subject = defaultOptions.mailtoParams.subject);
-    ee.mailtoParams.body    || (ee.mailtoParams.body    = defaultOptions.mailtoParams.body);
+    // Ensure we still have a subject + body in case gee.mailtoParams was used instead of the default mailtoParams
+    ee.mailtoParams.subject || (ee.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
+    ee.mailtoParams.body    || (ee.mailtoParams.body    = 'I found some errors, they are listed below:');
 
     sendUncaughtException['exceptionalException'] = exceptionalException;
 
