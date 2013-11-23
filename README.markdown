@@ -24,7 +24,7 @@ http://Github.com/devinrhode2/shield.js
 
 #### Vision
 I'd like to work with libraries to establish `window.onuncaughtException` as a standard, so you don't have to
-re-define their library function.
+re-define library functions.
 
 Eventually I'm sure it will be very clear for browsers to also send exceptions to this same function,
 but perhaps as a `window` event like `load`.
@@ -52,7 +52,7 @@ try {
 }
 ```
 
-If you really believe that the javascript community should have a way to register a global `uncaughtException`
+If you strongly believe that the javascript community should have a way to register a global `uncaughtException`
 handler like I do, you'll probably want to use this library.
 
 # Usage:
@@ -68,7 +68,7 @@ try {
 `sendUncaughtException` simply calls `window.onuncaughtException` — but if there's an exception
 in doing so, we pass that exceptional exception to, well, `exceptionalException`.
 
-`exceptionalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
+`sendUncaughtException.exceptionalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
 and then creates an email report of the errors and asks the user if they are willing to send it with a `confirm` dialog.
 If they hit OK, a window for a `mailto` link with all the info pre-populated pops up.
 
