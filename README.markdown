@@ -3,7 +3,7 @@
 **How can I register a global "uncaught exception" handler for javascript in the browser?**
 
 <a href="http://nodejs.org/api/process.html#process_event_uncaughtexception">
-**In node it's simple.**</a>,
+**In node it's simple.**</a>
 In the browser, all you have is
 <a href="http://webcache.googleusercontent.com/search?q=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&oq=cache%3Ahttps%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FGlobalEventHandlers.onerror%3Fredirectlocale%3Den-US%26redirectslug%3DWeb%252FAPI%252FWindow.onerror&aqs=chrome..69i57j69i58.3391j0j4&sourceid=chrome&espv=210&es_sm=91&ie=UTF-8">
 **`window.onerror`**</a>... which works like this:
@@ -15,7 +15,7 @@ window.onerror = function(message, url, lineNo) {
 }
 ```
 
-No stack trace here. For that we need a `try-catch` block.
+No stack trace here*. For that we need a `try-catch` block.
 
 How do you catch all errors and send them to one function?
 
@@ -72,29 +72,20 @@ in doing so, we pass that exceptional exception to, well, `exceptionalException`
 and then creates an email report of the errors and asks the user if they are willing to send it with a `confirm` dialog.
 If they hit OK, a window for a `mailto` link with all the info pre-populated pops up.
 
-The `confirm` dialog also happens to be a quick and convenient way to discover your own errors.
+The `confirm` dialog also happens to be a quick and convenient way to
+discover errors in your `window.onuncaughtException` handler.
 
-If you want to do something else with string and non-string errors, consider not using this library,
-copying out just the `sendUncaughtException` function, or just redefining exceptionalException to something else.
+If you want to do something other than ask users to email errors, just redefine `sendUncaughtException.exceptionalException`
 
 # Options
 exceptionalException adds properties onto itself as options.
 
-Options are:
- - emailPreface: Defaults to:
-=====
-    "Email error?
+The options and their defaults are listed around line 122 in `sendUncaughtException.js` at `var defaultOptions`
 
-     We had a serious issue and were not able to automatically report an error.
-     Click "ok" to send an email about the error so we can fix it.
-
-     Thanks!"
- - email: Email address to send errors to. Defaults to unrecordedJavaScriptError@{domain},support@{domain} (all subdomains are removed)
- - mailtoParams.subject: Subject of email
- - mailtoParams.bodyStart: **TOP** of the email message, before the list of errors
- - mailtoParams.bodyEnd: **END** of the email message, after the list
- - stringifyError: function used to turn input to exceptionalException into a string
-     when it is not a string (exception or potentially something else..)
+To customize any of these options, do:
+```javascript
+sendUncaughtException.exceptionalException.option = 'your new value';
+```
 
 You can use exceptionalException for other mission-critical fails:
 
@@ -102,6 +93,10 @@ You can use exceptionalException for other mission-critical fails:
 try {
   loadScript('jquery')
 } catch (e) {
-  exceptionalException('failed to load jQuery.')
+  sendUncaughtException.exceptionalException('failed to load jQuery.')
 }
 ```
+
+Enjoy! Please file issues and/or give me direct feedback to my same username @gmail.com
+
+*Except in the latest chrome, which gives you the exception object as the 5th parameter to `window.onerror`
