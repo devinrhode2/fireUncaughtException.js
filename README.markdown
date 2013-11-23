@@ -68,14 +68,14 @@ try {
 `sendUncaughtException` simply calls `window.onuncaughtException` — but if there's an exception
 in doing so, we pass that exceptional exception to, well, `exceptionalException`.
 
-`sendUncaughtException.exceptionalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
+`exceptionalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
 and then creates an email report of the errors and asks the user if they are willing to send it with a `confirm` dialog.
 If they hit OK, a window for a `mailto` link with all the info pre-populated pops up.
 
 The `confirm` dialog also happens to be a quick and convenient way to
 discover errors in your `window.onuncaughtException` handler.
 
-If you want to do something other than ask users to email errors, just redefine `sendUncaughtException.exceptionalException`
+If you want to do something other than ask users to email errors, just redefine `exceptionalException`
 
 # Options
 exceptionalException adds properties onto itself as options.
@@ -84,7 +84,7 @@ The options and their defaults are listed around line 122 in `sendUncaughtExcept
 
 To customize any of these options, do:
 ```javascript
-sendUncaughtException.exceptionalException.option = 'your new value';
+exceptionalException.option = 'your new value';
 ```
 
 You can use exceptionalException for other mission-critical fails:
@@ -93,14 +93,14 @@ You can use exceptionalException for other mission-critical fails:
 try {
   loadScript('jquery')
 } catch (e) {
-  sendUncaughtException.exceptionalException('failed to load jQuery.')
+  exceptionalException('failed to load jQuery.')
 }
 ```
 
 By default `exceptionalException` will wait 34 milliseconds for other errors to reel in, you can set this to
 0 or any other time my passing in the number as the second parameter to `exceptionalException`. For example:
 ```javascript
-sendUncaughtException.exceptionalException('failed to load jQuery.', 5000); // wait for other load failures
+exceptionalException('failed to load jQuery.', 5000); // wait for other load failures
 ```
 Futhermore, `exceptionalException` returns the timer setTimeout, allowing you to `clearTimeout` if you know you're
 going to call `exceptionalException` again very shortly.
