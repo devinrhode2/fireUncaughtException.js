@@ -15,14 +15,14 @@ window.onerror = function(message, url, lineNo) {
 }
 ```
 
-No stack trace here*. For that we need a `try-catch` block.
+In order to get a real stack trace, all you have is the `try-catch` block*.
 
 How do you catch all errors and send them to one function?
 
 I have a solution in progress that helps you re-define library functions and catch their errors:
 http://Github.com/devinrhode2/shield.js
 
-##### Vision
+#### Vision
 I'd like to work with libraries to establish `window.onuncaughtException` as a standard, so you don't have to
 re-define their library function.
 
@@ -98,5 +98,6 @@ try {
 ```
 
 Enjoy! Please file issues and/or give me direct feedback to my same username @gmail.com
+
 
 *Except in the latest chrome, which gives you the exception object as the 5th parameter to `window.onerror`
