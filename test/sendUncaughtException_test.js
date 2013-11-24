@@ -1,4 +1,5 @@
-(function($) {
+(function() {
+  var undefined;
   /*
     ======== A Handy Little QUnit Reference ========
     http://api.qunitjs.com/
@@ -20,13 +21,18 @@
       throws(block, [expected], [message])
   */
 
-  module('jQuery#sendUncaughtException', {
+  module('sendUncaughtException', {
     // This will run before each test in this module.
     setup: function() {
-      this.elems = $('#qunit-fixture').children();
+      //make sure sendUncaughtException and exceptionalException
     }
   });
 
+  test('are defined', function(){
+    expect(2);
+    ok(sendUncaughtException);
+    ok(exceptionalException);
+  })
   test('is chainable', function() {
     expect(1);
     // Not a bad test to run on collection methods.
@@ -59,4 +65,4 @@
     deepEqual(this.elems.filter(':sendUncaughtException').get(), this.elems.last().get(), 'knows awesome when it sees it');
   });
 
-}(jQuery));
+}());
