@@ -10,16 +10,29 @@
 (function(){
   var undefined; // safe reference to undefined
 
-  function sendUncaughtException(exception) {
-    // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
-    exception.stack || (exception.stack = exception.stacktrace);
+  window['sendUncaughtException'] = function(ex) {
+    try {
+      // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
+      ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
+    } catch (e) {
+      // window['prop'] ensures closure compiler advanced mode doesn't mistakenly rename the properties.
+      if (!window['sendUncaughtException']['allowPrimitives']) {
+        if (window.console) {
+          console.error('primitive value was thrown:' + ex + '\n\n' +
+            'Please do throw new Error("message") instead of throw "message" so that you have a stack trace.\n\n' +
+            'Stack trace up to this point:\n' + (new Error('creating stack')).stack +
+            '\n\nTo silences these messages, do window.sendUncaughtException.allowPrimitives = true'
+          );
+        }
+      }
+    }
 
     // Hand uncaught exception over to onuncaughtException:
     try {
-      return window.onuncaughtException(exception);
+      return window.onuncaughtException(ex);
       // return is included to be as transparent as possible,
       // it makes new interesting use cases and patterns possible (which are yet to be known)
-      // It may also be good for clearing resources..
+      // It may also be good for clearing resources, and makes the function more testable
 
       // I use this try-catch structure instead of several if checks for efficiency
     } catch (exceptionCallingOnUncaughtException) {
@@ -28,20 +41,18 @@
       if (window.onuncaughtException === undefined) {
         exceptionCallingOnUncaughtException = [
           'onuncaughtException is undefined.',
-          'Please define one; like this for example:',
-          '  window.onuncaughtException = function (exception) {',
-          '    // log exception.stack to your server',
+          'Example definition:',
+          '  window.onuncaughtException = function (ex) {',
+          '    // log ex.stack to your server',
           '  };'
         ].join('\n');
       }
 
-      // Using ['prop'] to prevent Closure Compiler advanced mode from re-naming it
       clearTimeout(exceptionalException(exceptionCallingOnUncaughtException));
-                   exceptionalException(exception, 100);
+      return [ex, exceptionalException(ex, 100)];
 
     }
-  }
-  window['sendUncaughtException'] = sendUncaughtException;
+  };
 
   window['exceptionalException'] = function(message) {
     //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially here.
@@ -50,7 +61,8 @@
     var lastMessageReceived = '';
 
     // Define the actual core function: (INITIALIZATION BELOW)
-    function exceptionalException(message, msToWaitForMoreExceptions) {
+    // ee is short for exceptionalException
+    var ee = function(message, msToWaitForMoreExceptions) {
       // Make sure the message is a string, lodash style (search "function isString" in lodash.compat.js)
       if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) {
         message = ee.stringifyError(message);
@@ -111,9 +123,6 @@
 
     // # INITIALIZATION:
 
-    // Alias:
-    var ee = exceptionalException;
-
     // gee stands for "Global Exceptional Exception"
     var gee = window['exceptionalException'];
 
@@ -131,9 +140,9 @@
       bodyEnd: 'Hope this helps.',
 
       // stringifyError is globally exposed for other libraries to use
-      stringifyError: function (hash) {
+      stringifyError: function (ex) {
         // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
-        hash.stack || (hash.stack = hash.stacktrace);
+        ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
         /* Interesting hack to always have a computed stack property:
         extendFunction('Error', function(args, oldError) {
           var ret = oldError.apply(window, args);
@@ -146,8 +155,8 @@
         Also, we'd have to do this to every error type, (TypeError, ReferenceError, etc) and
         */
         var result = '';
-        for (var key in hash) {
-          result += key + ':\n  ' + hash[key] + '\n';
+        for (var key in ex) {
+          result += key + ':\n  ' + ex[key] + '\n';
         }
         return result;
       }
@@ -160,14 +169,15 @@
       }
     }
 
-    // Ensure we still have a subject + body in case gee.mailtoParams was used instead of the default mailtoParams
+    // Ensure we always have a subject + body in case gee.mailtoParams was used instead of the default mailtoParams
+    // If you want the user to customize these things(?), set them to a space character.
     ee.mailtoParams.subject || (ee.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
     ee.mailtoParams.body    || (ee.mailtoParams.body    = 'Errors listed below:');
 
-    window['exceptionalException'] = exceptionalException;
+    window['exceptionalException'] = ee;
 
     // Start!
-    return exceptionalException(message);
+    return ee(message);
   };
 
 })();

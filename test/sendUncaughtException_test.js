@@ -24,7 +24,7 @@
   module('sendUncaughtException', {
     // This will run before each test in this module.
     setup: function() {
-      //make sure sendUncaughtException and exceptionalException
+      delete window.onuncaughtException;
     }
   });
 
@@ -32,37 +32,75 @@
     expect(2);
     ok(sendUncaughtException);
     ok(exceptionalException);
-  })
-  test('is chainable', function() {
-    expect(1);
-    // Not a bad test to run on collection methods.
-    strictEqual(this.elems.sendUncaughtException(), this.elems, 'should be chainable');
   });
+
+  test('property propagation', function(){
+    expect(1);
+    window.f = function(){
+      function f() {
+        console.log('someProp:', ef.someProp);
+        return ef.someProp;
+      }
+      var ef = f;
+      ef.someProp = window.f.someProp;
+      window.f = ef;
+      return ef();
+    };
+    window.f.someProp = 'custom';
+    f();
+    window.f.someProp = 'new custom value';
+    strictEqual(f(), window.f.someProp);
+  });
+
 
   test('is awesome', function() {
     expect(1);
-    strictEqual(this.elems.sendUncaughtException().text(), 'awesome0awesome1awesome2', 'should be awesome');
+    strictEqual(a, b, 'should be awesome');
   });
 
-  module('jQuery.sendUncaughtException');
 
-  test('is awesome', function() {
-    expect(2);
-    strictEqual($.sendUncaughtException(), 'awesome.', 'should be awesome');
-    strictEqual($.sendUncaughtException({punctuation: '!'}), 'awesome!', 'should be thoroughly awesome');
+/*
+module('sendUncaughtException');
+
+test('onuncaughtException\'s return value should get returned', function(){
+  window.onuncaughtException = function(exception) {
+    return 'returnValue';
+  };
+  strictEqual(sendUncaughtException(new Error('test')), 'returnValue');
+  strictEqual(sendUncaughtException('raw string test'), 'returnValue');
+});
+
+//
+
+module('exceptionalException');
+
+asyncTest('exceptionalException', function(){
+  expect(2);
+
+  ok(_.isNumber(exceptionalException('string input')));
+
+  // Assuming we have a extendFunction.js devDependency with tests passing,
+  extendFunction('confirm', function(args, oldConfirm) {
+    ok('confirm called');
+    start();
   });
 
-  module(':sendUncaughtException selector', {
-    // This will run before each test in this module.
-    setup: function() {
-      this.elems = $('#qunit-fixture').children();
-    }
+});
+
+
+extendFunction.js:
+  module('prototype, constructor, and length copied over properly');
+  extendFunction('confirm', function(args, oldConfirm) {
+    strictEqual(window.confirm, oldConfirm,
+    return oldConfirm;
   });
 
-  test('is awesome', function() {
-    expect(1);
-    // Use deepEqual & .get() when comparing jQuery objects.
-    deepEqual(this.elems.filter(':sendUncaughtException').get(), this.elems.last().get(), 'knows awesome when it sees it');
-  });
+-
+  if process and no fireUncaughtException then just throw instead of calling fireUncaughtException
+
+
+*/
+
+
 
 }());

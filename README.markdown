@@ -61,7 +61,7 @@ handler like I do, you'll probably want to use this library.
 try {
   // code
 } catch (e) {
-  sendUncaughtException(e);
+  return sendUncaughtException(e);
 }
 ```
 
@@ -80,7 +80,7 @@ If you want to do something other than ask users to email errors, just redefine 
 # Options
 exceptionalException adds properties onto itself as options.
 
-The options and their defaults are listed around line 122 in `sendUncaughtException.js` at `var defaultOptions`
+The options and their defaults are listed around line 129 in `sendUncaughtException.js` at `var defaultOptions`
 
 To customize any of these options, do:
 ```javascript
@@ -93,7 +93,7 @@ You can use exceptionalException for other mission-critical fails:
 try {
   loadScript('jquery')
 } catch (e) {
-  exceptionalException('failed to load jQuery.')
+  return exceptionalException('failed to load jQuery.')
 }
 ```
 
@@ -102,8 +102,10 @@ By default `exceptionalException` will wait 34 milliseconds for other errors to 
 ```javascript
 exceptionalException('failed to load jQuery.', 5000); // wait for other load failures
 ```
-Futhermore, `exceptionalException` returns the timer setTimeout, allowing you to `clearTimeout` if you know you're
-going to call `exceptionalException` again very shortly.
+Futhermore, `exceptionalException` returns the timer id from setTimeout, allowing you to
+`clearTimeout` if you know you're going to call `exceptionalException` again very shortly.
+
+
 
 Enjoy! Please file issues and/or give me direct feedback to my same username @gmail.com
 
