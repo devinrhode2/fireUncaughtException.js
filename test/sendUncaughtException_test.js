@@ -30,12 +30,13 @@
 
   test('are defined', function(){
     expect(2);
-    ok(sendUncaughtException);
-    ok(exceptionalException);
+    ok(sendUncaughtException, 'sendUncaughtException is defined');
+    ok(exceptionalException, 'exceptionalException is defined');
   });
 
   test('property propagation', function(){
     expect(1);
+    // This tests the basic structure of exceptionalException, and the style of property use.
     window.f = function(){
       function f() {
         console.log('someProp:', ef.someProp);
@@ -53,41 +54,31 @@
   });
 
 
-  test('is awesome', function() {
-    expect(1);
-    strictEqual(a, b, 'should be awesome');
+  test('onuncaughtException\'s return value should get returned', function(){
+    window.onuncaughtException = function(exception) {
+      return 'returnValue';
+    };
+    strictEqual(sendUncaughtException(new Error('test')), 'returnValue', 'new Error input, should still equal returnValue');
+    strictEqual(sendUncaughtException('raw string test'), 'returnValue', 'raw string input, should still equal returnValue');
+  });
+
+  module('exceptionalException');
+
+  asyncTest('exceptionalException', function(){
+    expect(2);
+
+    // Assuming we have a extendFunction.js devDependency with tests passing,
+    extendFunction('confirm', function(args, oldConfirm) {
+      ok('confirm called', 'confirm was called');
+      start();
+    });
+
+    ok(_.isNumber(exceptionalException('string input')), 'exceptionalException should return a timer id from setTimeout');
+
   });
 
 
 /*
-module('sendUncaughtException');
-
-test('onuncaughtException\'s return value should get returned', function(){
-  window.onuncaughtException = function(exception) {
-    return 'returnValue';
-  };
-  strictEqual(sendUncaughtException(new Error('test')), 'returnValue');
-  strictEqual(sendUncaughtException('raw string test'), 'returnValue');
-});
-
-//
-
-module('exceptionalException');
-
-asyncTest('exceptionalException', function(){
-  expect(2);
-
-  ok(_.isNumber(exceptionalException('string input')));
-
-  // Assuming we have a extendFunction.js devDependency with tests passing,
-  extendFunction('confirm', function(args, oldConfirm) {
-    ok('confirm called');
-    start();
-  });
-
-});
-
-
 extendFunction.js:
   module('prototype, constructor, and length copied over properly');
   extendFunction('confirm', function(args, oldConfirm) {
@@ -97,8 +88,6 @@ extendFunction.js:
 
 -
   if process and no fireUncaughtException then just throw instead of calling fireUncaughtException
-
-
 */
 
 

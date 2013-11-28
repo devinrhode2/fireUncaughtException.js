@@ -146,7 +146,7 @@
         /* Interesting hack to always have a computed stack property:
         extendFunction('Error', function(args, oldError) {
           var ret = oldError.apply(window, args);
-          ret.stack || (ret.stack = ret.stacktrace);
+          ret.stack || (ret.stacktrace ? (ret.stack = ret.stacktrace) : '');
           return ret;
         });
 
@@ -170,7 +170,8 @@
     }
 
     // Ensure we always have a subject + body in case gee.mailtoParams was used instead of the default mailtoParams
-    // If you want the user to customize these things(?), set them to a space character.
+    // If you want the user to customize these things(?), set them to a space character, empty
+    // string is falsy and the default would be used instead
     ee.mailtoParams.subject || (ee.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
     ee.mailtoParams.body    || (ee.mailtoParams.body    = 'Errors listed below:');
 
