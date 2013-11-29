@@ -105,9 +105,14 @@ exceptionalException('failed to load jQuery.', 5000); // wait for other load fai
 Futhermore, `exceptionalException` returns the timer id from setTimeout, allowing you to
 `clearTimeout` if you know you're going to call `exceptionalException` again very shortly.
 
+# Download
 
+```
+npm install devinrhode2/sendUncaughtException --save
+```
+
+This downloads the version on master. No other versions are available.
 
 Enjoy! Please file issues and/or give me direct feedback to my same username @gmail.com
-
 
 *Except in the latest chrome, which gives you the exception object as the 5th parameter to `window.onerror`
