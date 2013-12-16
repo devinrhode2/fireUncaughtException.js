@@ -1,24 +1,24 @@
 /*!
  * sendUncaughtException.js - Catch exceptions and send them to window.onuncaughtException(e).
- * sendUncaughtException(e) is just a more robust way of calling this function
+ * return sendUncaughtException(e) is just a more robust way of calling this function
  *
  * github.com/devinrhode2/sendUncaughtException.js
  *
- * Copyright (c) 2013 sendUncaughtException.js contributors
+ * Copyright (c) 2013 Devin Gene Rhode
  * MIT Licensed
  */
 (function(){
   var undefined; // safe reference to undefined
 
+  // window['prop'] ensures closure compiler advanced mode doesn't mistakenly rename a property.
   window['sendUncaughtException'] = function(ex) {
     try {
       // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
       ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
-    } catch (e) {
-      // window['prop'] ensures closure compiler advanced mode doesn't mistakenly rename the properties.
+    } catch ( _ ) {
       if (!window['sendUncaughtException']['allowPrimitives']) {
-        if (window.console) {
-          console.error('primitive value was thrown:' + ex + '\n\n' +
+        if (window.console && console.error) {
+          console.error('PRIMITIVE VALUE THROWN:' + ex + '\n\n' +
             'Please do throw new Error("message") instead of throw "message" so that you have a stack trace.\n\n' +
             'Stack trace up to this point:\n' + (new Error('creating stack')).stack +
             '\n\nTo silences these messages, do window.sendUncaughtException.allowPrimitives = true'
@@ -52,6 +52,28 @@
       return [ex, exceptionalException(ex, 100)];
 
     }
+  }
+  window['sendUncaughtException']['stringifyException'] = function(ex) {
+    // stringifyException is globally exposed for other libraries to use
+    // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
+    ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
+    /* interesting hack to always have a computed stack property:
+    extendFunction('Error', function(args, oldError) {
+      var ex = oldError.apply(window, args);
+      ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
+      return ex;
+    });
+
+    However, it ends up adding like 4 extra function calls to the stack frame..
+    we could increase the number of stack frames given in stack traces in chrome.
+    Also, we'd have to do this to every error type, (TypeError, ReferenceError, etc), and custom types would
+    also need the extension applied
+    */
+    var result = '';
+    for (var key in ex) {
+      result += key + ':\n  ' + ex[key] + '\n';
+    }
+    return result;
   };
 
   window['exceptionalException'] = function(message) {
@@ -65,7 +87,7 @@
     var ee = function(message, msToWaitForMoreExceptions) {
       // Make sure the message is a string, lodash style (search "function isString" in lodash.compat.js)
       if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) {
-        message = ee.stringifyError(message);
+        message = ee.stringifyException(message);
       }
 
       // Add the message to the email body.
@@ -77,7 +99,7 @@
       lastMessageReceived = message;
 
       // Get a snapshot of the lastMessageReceived at the start of the timeout by using a closure
-      (function(){
+      return (function(){
         var lastMessageAtStartOfTimeout = lastMessageReceived;
         // the return allows you to clearTimeout if you know you have another exceptional exception coming
         return setTimeout(function(){
@@ -119,7 +141,7 @@
           //throw 'crashing thread to clear resources??'
         }, msToWaitForMoreExceptions || 34); // Wait for 2 frames by default: (1000/60) * 2 = 33.3...
       })();
-    }
+    };
 
     // # INITIALIZATION:
 
@@ -137,29 +159,7 @@
         body: Start of the email. See default below.
         cc: Feel free to add cc and bcc properties
       */},
-      bodyEnd: 'Hope this helps.',
-
-      // stringifyError is globally exposed for other libraries to use
-      stringifyError: function (ex) {
-        // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
-        ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
-        /* Interesting hack to always have a computed stack property:
-        extendFunction('Error', function(args, oldError) {
-          var ret = oldError.apply(window, args);
-          ret.stack || (ret.stacktrace ? (ret.stack = ret.stacktrace) : '');
-          return ret;
-        });
-
-        However, it ends up adding like 4 extra function calls to the stack frame..
-        we could increase the number of stack frames given in stack traces in chrome.
-        Also, we'd have to do this to every error type, (TypeError, ReferenceError, etc) and
-        */
-        var result = '';
-        for (var key in ex) {
-          result += key + ':\n  ' + ex[key] + '\n';
-        }
-        return result;
-      }
+      bodyEnd: 'Hope this helps.'
     };
 
     // copy over options from window['exceptionalException'] to exceptionalException, falling back to defaults.
