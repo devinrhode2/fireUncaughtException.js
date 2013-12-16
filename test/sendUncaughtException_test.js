@@ -69,14 +69,28 @@
 
     // Assuming we have a extendFunction.js devDependency with tests passing,
     extendFunction('confirm', function(args, oldConfirm) {
-      ok('confirm called', 'confirm was called');
+      // greater than 2 because the library has a hardcoded '\n\n' in the confirm call
+      ok(args[0].length > 2, 'confirm was called');
       start();
     });
 
-    ok(_.isNumber(exceptionalException('string input')), 'exceptionalException should return a timer id from setTimeout');
-
+    var result = exceptionalException('string input');
+    var isNumber = _.isNumber(result);
+    if (isNumber) {
+      ok(isNumber, 'exceptionalException should return a timer id from setTimeout');
+    } else {
+      console.log({I: result, type: typeof result, isNumber: isNumber});
+    }
   });
 
+  test('stringifyException', 1, function(){
+    var theErrorMessage = 'the error message';
+    ok(
+      ~sendUncaughtException.stringifyException(new Error(theErrorMessage))
+      .indexOf(theErrorMessage),
+      'stringifyException better not eliminate the original error message!!'
+    );
+  });
 
 /*
 extendFunction.js:
