@@ -75,7 +75,9 @@ If they hit OK, a window for a `mailto` link with all the info pre-populated pop
 The `confirm` dialog also happens to be a quick and convenient way to
 discover errors in your `window.onuncaughtException` handler.
 
-If you want to do something other than ask users to email errors, just redefine `exceptionalException`
+If you want to do something other than ask users to email errors, fork this library and redefine `exceptionalException`
+
+Also, this libraries method for turning an exception into a string is exposed as `sendUncaughtException.stringifyException`. The method just takes in an exception and returns a string.
 
 # Options
 exceptionalException adds properties onto itself as options.
@@ -111,8 +113,8 @@ Futhermore, `exceptionalException` returns the timer id from setTimeout, allowin
 npm install devinrhode2/sendUncaughtException --save
 ```
 
-This downloads the version on master. No other versions are available.
+This downloads the version on the master branch on github. No other versions are available at this time.
 
-Enjoy! Please file issues and/or give me direct feedback to my same username @gmail.com
+Enjoy! Please file issues and/or give me direct feedback via email. I use gmail and my username is devinrhode2 everywhere.
 
 *Except in the latest chrome, which gives you the exception object as the 5th parameter to `window.onerror`
