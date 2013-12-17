@@ -11,7 +11,7 @@
   var undefined; // safe reference to undefined
 
   // window['prop'] ensures closure compiler advanced mode doesn't mistakenly rename a property.
-  window['sendUncaughtException'] = function(ex) {
+  function sendUncaughtException(ex) {
     try {
       // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
       ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
@@ -53,7 +53,7 @@
 
     }
   }
-  window['sendUncaughtException']['stringifyException'] = function(ex) {
+  sendUncaughtException['stringifyException'] = function(ex) {
     // stringifyException is globally exposed for other libraries to use
     // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
     ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
@@ -86,8 +86,11 @@
     // ee is short for exceptionalException
     var ee = function(message, msToWaitForMoreExceptions) {
       // Make sure the message is a string, lodash style (search "function isString" in lodash.compat.js)
-      if ( !(typeof message == 'string' || toString.call(message) == '[object String]') ) {
-        message = ee.stringifyException(message);
+      if ( !(typeof message == 'string' || Object.prototype.toString.call(message) == '[object String]') ) {
+        // Even though Object.prototype.toString.call may give '[object String]',
+        // new String('haha ') + 'other sting' === 'haha other string' (verified in chrome)
+        // This is because it uses the String classes toString method
+        message = sendUncaughtException['stringifyException'](message);
       }
 
       // Add the message to the email body.
@@ -180,5 +183,54 @@
     // Start!
     return ee(message);
   };
+
+  // Export/define function just like lodash
+
+  /** Used to determine if values are of the language type Object */
+  var objectTypes = {
+    'function': true,
+    'object': true
+  };
+
+  /** Used as a reference to the global object */
+  var root = (objectTypes[typeof window] && window) || this;
+
+  /** Detect free variable `exports` */
+  var freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports;
+
+  /** Detect free variable `module` */
+  var freeModule = objectTypes[typeof module] && module && !module.nodeType && module;
+
+  /** Detect the popular CommonJS extension `module.exports` */
+  var moduleExports = freeModule && freeModule.exports === freeExports && freeExports;
+
+  /** Detect free variable `global` from Node.js or Browserified code and use it as `root` */
+  var freeGlobal = objectTypes[typeof global] && global;
+  if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
+    root = freeGlobal;
+  }
+
+  // some AMD build optimizers like r.js check for condition patterns like the following:
+  if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
+    // define as a named module like jQuery and underscore.js
+    define("sendUncaughtException", [], function () {
+      return sendUncaughtException;
+    });
+  }
+  // check for `exports` after `define` in case a build optimizer adds an `exports` object
+  else if (freeExports && freeModule) {
+    // in Node.js or RingoJS
+    if (moduleExports) {
+      freeModule['exports'] = sendUncaughtException;
+    }
+    // in Narwhal or Rhino -require
+    else {
+      freeExports['sendUncaughtException'] = sendUncaughtException;
+    }
+  }
+  else {
+    // in a browser or Rhino
+    root['sendUncaughtException'] = sendUncaughtException;
+  }
 
 })();
