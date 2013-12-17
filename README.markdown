@@ -77,7 +77,7 @@ discover errors in your `window.onuncaughtException` handler.
 
 If you want to do something other than ask users to email errors, fork this library and redefine `exceptionalException`
 
-Also, this libraries method for turning an exception into a string is exposed as `sendUncaughtException.stringifyException`. The method just takes in an exception and returns a string.
+Also, this libraries method for turning an exception into a string is exposed as `sendUncaughtException.stringifyException`. The method takes in an exception or string and returns a string.
 
 # Options
 exceptionalException adds properties onto itself as options.

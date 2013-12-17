@@ -54,6 +54,15 @@
     }
   }
   sendUncaughtException['stringifyException'] = function(ex) {
+    // If input is a string, just return it
+    // string typecheck is lodash style (search "function isString" in lodash.compat.js)
+    if ( (typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]') ) {
+      return ex;
+      // Even though Object.prototype.toString.call may give '[object String]',
+      // new String('haha ') + 'other sting' === 'haha other string' (verified in chrome)
+      // This is because it uses the String classes toString method
+    }
+
     // stringifyException is globally exposed for other libraries to use
     // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
     ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
@@ -85,13 +94,8 @@
     // Define the actual core function: (INITIALIZATION BELOW)
     // ee is short for exceptionalException
     var ee = function(message, msToWaitForMoreExceptions) {
-      // Make sure the message is a string, lodash style (search "function isString" in lodash.compat.js)
-      if ( !(typeof message == 'string' || Object.prototype.toString.call(message) == '[object String]') ) {
-        // Even though Object.prototype.toString.call may give '[object String]',
-        // new String('haha ') + 'other sting' === 'haha other string' (verified in chrome)
-        // This is because it uses the String classes toString method
-        message = sendUncaughtException['stringifyException'](message);
-      }
+      // Make sure the message is a string
+      message = sendUncaughtException['stringifyException'](message);
 
       // Add the message to the email body.
       ee.mailtoParams.body += '\n\n' + message;
