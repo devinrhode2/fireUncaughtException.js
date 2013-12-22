@@ -83,13 +83,43 @@
     }
   });
 
-  test('stringifyException', 1, function(){
-    var theErrorMessage = 'the error message';
+  test('stringifyException', function(){
+    var message = 'the error message';
+    var error = new Error(message);
+    var result = sendUncaughtException.stringifyException(error);
     ok(
-      ~sendUncaughtException.stringifyException(new Error(theErrorMessage))
-      .indexOf(theErrorMessage),
+      ~result.indexOf(message),
       'stringifyException better not eliminate the original error message!!'
     );
+    var specialKeys = [
+      /* found in modern browsers: */
+      'name'         /* all */
+    , 'message'      /* all */
+    , 'stack'        /* all */
+    , 'fileName'     /* FF  */
+    , 'lineNumber'   /* FF  */
+    , 'columnNumber' /* FF  */
+
+    , /* old safari */
+    , 'line'
+    , 'sourceId'
+    , 'sourceURL'
+    , 'expressionBeginOffset'
+    , 'expressionCaretOffset'
+    , 'expressionEndOffset'
+
+    , /* old chrome */
+    , 'arguments'
+    , 'type'
+    ];
+    _(specialKeys).forEach(function(item) {
+      if (error[item]) {
+        ok(
+          ~result.indexOf(item + ':\n  ' + error[item]),
+          'result better contain stringified properties'
+        );
+      }
+    });
   });
 
 /*
