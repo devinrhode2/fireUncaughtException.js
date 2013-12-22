@@ -43,7 +43,7 @@
       // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
       ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
     } catch ( _ ) {
-      if (!window['sendUncaughtException']['allowPrimitives']) {
+      if (!root['sendUncaughtException']['allowPrimitives']) {
         if (window.console && console.error) {
           console.error('PRIMITIVE VALUE THROWN:' + ex + '\n\n' +
             'Please do throw new Error("message") instead of throw "message" so that you have a stack trace.\n\n' +
@@ -216,18 +216,11 @@
   };
 
   // copy over options from root['exceptionalException'] to ee, falling back to defaults.
-  if (root['exceptionalException']) {
-    //maybe we should transpile from es6 or use coffeescript to clean up these repeated for loops?
-    for (var opt in defaults) {
-      if (defaults.hasOwnProperty(opt)) {
-        ee[opt] = root['exceptionalException'][opt] || defaults[opt];
-      }
-    }
-  } else {
-    for (var opt in defaults) {
-      if (defaults.hasOwnProperty(opt)) {
-        ee[opt] = defaults[opt]
-      }
+  // first ensure root['exceptionalException'] is an object type for inside this for loop
+  objectTypes[typeof root['exceptionalException']] ||  (root['exceptionalException'] = {});
+  for (var opt in defaults) {
+    if (defaults.hasOwnProperty(opt)) {
+      ee[opt] = root['exceptionalException'][opt] || defaults[opt];
     }
   }
 
