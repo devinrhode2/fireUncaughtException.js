@@ -8,8 +8,6 @@
  * MIT Licensed
  */
 (function(){
-  var undefined; // safe reference to undefined
-
 
   // Establish "root" lodash style:
   /** Used to determine if values are of the language type Object */
@@ -43,6 +41,8 @@
       callback(array[index]);
     }
   }
+  var undefined; // safe reference to undefined.
+  // Hopefully in the future, we can remove this because undefined will be a constant in ES6
 
   function sendUncaughtException(ex) {
     try {
@@ -82,8 +82,8 @@
         ].join('\n');
       }
 
-      clearTimeout(exceptionalException(exceptionCallingOnUncaughtException));
-      return exceptionalException(ex, 100);
+      clearTimeout(fatalException(exceptionCallingOnUncaughtException));
+      return fatalException(ex, 100);
     }
   }
 
@@ -95,51 +95,7 @@
   //   someValue
   //
   //
-  function SimpleError(ex) {
-    // If there is a stacktrace property (Opera 10) alias it to the stack property
-    // Aside: interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
-    if (ex.stacktrace) {
-      ex.stack = ex.stacktrace;
-    }
-
-    // First copy over general properties
-    for (var key in ex) {
-      this[key] = ex[key];
-    }
-
-    simpleForEach([
-      // found in all modern browsers:
-      'name'
-    , 'message'
-    , 'stack'
-
-      // FF:
-    , 'fileName'
-    , 'lineNumber'
-    , 'columnNumber'
-
-      // old safari:
-    , 'line'
-    , 'sourceId'
-    , 'sourceURL'
-    , 'expressionBeginOffset'
-    , 'expressionCaretOffset'
-    , 'expressionEndOffset'
-
-      //ie 10:
-    , 'number'
-
-      // old chrome, node:
-    , 'arguments'
-    , 'type'
-
-      // old IE:
-    , 'description'
-    ], function(key) {
-      if (ex[key]) {
-        this[key] = ex[key];
-      }
-    });
+  function SimpleError() {
   };
   SimpleError.prototype.toString = function() {
     var result = '';
@@ -153,7 +109,7 @@
 
 
   // A wrapper around SimpleError that filters out strings:
-  root['CreateSimpleError'] = function(ex) {
+  sendUncaughtException['CreateSimpleError'] = function(ex) {
     // If input is a string, just return it
     if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
       return ex;
@@ -173,23 +129,72 @@
           }
         });
       }
-      return new SimpleError(ex);
+      var result = new SimpleError();
+      // If there is a stacktrace property (Opera 10) alias it to the stack property
+      // Aside: interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
+      if (ex.stacktrace) {
+        ex.stack = ex.stacktrace;
+      }
+
+      // First copy over general properties
+      for (var key in ex) {
+        result[key] = ex[key];
+      }
+
+      // this list of special properties was sourced from TraceKit.js,
+      // https://raw.github.com/stacktracejs/stacktrace.js/master/test/CapturedExceptions.js
+      // and https://docs.google.com/spreadsheet/ccc?key=0AjhErv9K3dPFdGVkVWlxXzBiOUd1ckN2bEZjWEdObEE&usp=drive_web#gid=0
+      simpleForEach([
+        // found in all modern browsers:
+        'name'
+      , 'message'
+      , 'stack'
+
+        // FF:
+      , 'fileName'
+      , 'lineNumber'
+      , 'columnNumber'
+
+        // old safari:
+      , 'line'
+      , 'sourceId'
+      , 'sourceURL'
+      , 'expressionBeginOffset'
+      , 'expressionCaretOffset'
+      , 'expressionEndOffset'
+
+        //ie 10:
+      , 'number'
+
+        // old chrome, node:
+      , 'arguments'
+      , 'type'
+      ], function(key) {
+        if (ex[key]) {
+          result[key] = ex[key];
+        }
+      });
+      // old IE:
+      if (ex.description && ex.description !== ex.message) {
+        result.description = ex.description;
+      }
+      return result;
     }
   };
 
-  // exceptionalException state variables
+  // fatalException state variables
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
 
-  //var exceptionalException .... is too long. ee stands for exceptionalException
-  var ee = function(message, msToWaitForMoreExceptions) {
+  //var fatalException .... is too long. fe stands for fatalException
+  var fe = function(message, msToWaitForMoreExceptions) {
     //'use strict' is senseless here. We don't need the crutch creating more exceptions
 
     // Make sure the message is a string
-    message = root['CreateSimpleError'](message);
+    message = sendUncaughtException['CreateSimpleError'](message);
 
     // Add the message to the email body.
-    ee.mailtoParams.body += '\n\n' + message;
+    fe.mailtoParams.body += '\n\n' + message;
 
     // Mark message as received.
     if (receivedErrorMessages[message]) return 'already received this error message';
@@ -203,25 +208,25 @@
       return setTimeout(function(){
         if (lastMessageReceived !== lastMessageAtStartOfTimeout) return; //bail and try sending on next timeout
 
-        ee.mailtoParams.body += '\n\n' + ee.bodyEnd;
+        fe.mailtoParams.body += '\n\n' + fe.bodyEnd;
 
         var emailPreview = [
-          'To:'      + ee.emailAddress,
-          'Subject:' + ee.mailtoParams.subject,
-                       ee.mailtoParams.body
+          'To:'      + fe.emailAddress,
+          'Subject:' + fe.mailtoParams.subject,
+                       fe.mailtoParams.body
         ].join('\n');
 
         // We have the error report containing all errors setup and are ready to send it,
         // let's ask the user if they are willing to:
-        if (confirm(ee.emailPreface + '\n\n' + emailPreview)) {
+        if (confirm(fe.emailPreface + '\n\n' + emailPreview)) {
 
           var finalUrl = message; //re-use message variable to conserve memory
-          finalUrl = 'mailto:' + ee.emailAddress + '?';
+          finalUrl = 'mailto:' + fe.emailAddress + '?';
 
           // mailtoParams need to be turned into a querystring and appended to finalUrl
-          for (var param in ee.mailtoParams) {
-            if (ee.mailtoParams.hasOwnProperty(param)) {
-              finalUrl += param + '=' + encodeURIComponent(ee.mailtoParams) + '&';
+          for (var param in fe.mailtoParams) {
+            if (fe.mailtoParams.hasOwnProperty(param)) {
+              finalUrl += param + '=' + encodeURIComponent(fe.mailtoParams) + '&';
             }
           }
 
@@ -254,26 +259,25 @@
     bodyEnd: 'Hope this helps.'
   };
 
-  // copy over options from root['exceptionalException'] to ee, falling back to defaults.
-  // first ensure root['exceptionalException'] is an object type for inside this for loop
-  if (!root['exceptionalException'] || !objectTypes[typeof root['exceptionalException']]) {
-    root['exceptionalException'] = {}
+  // copy over options from root['fatalException'] to fe, falling back to defaults.
+  // first ensure root['fatalException'] is an object type for inside this for loop
+  if (!root['fatalException'] || !objectTypes[typeof root['fatalException']]) {
+    root['fatalException'] = {}
   }
-  root['exceptionalException'] || (root['exceptionalException'] = {});
   for (var opt in defaults) {
     if (defaults.hasOwnProperty(opt)) {
-      ee[opt] = root['exceptionalException'][opt] || defaults[opt];
+      fe[opt] = root['fatalException'][opt] || defaults[opt];
     }
   }
 
-  // Either ee.mailtoParams.subject/body
+  // Either fe.mailtoParams.subject/body
   // are defined by now   OR (we will assign it to our default value)
-  ee.mailtoParams.subject || (ee.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
-  ee.mailtoParams.body    || (ee.mailtoParams.body    = 'Errors listed below:');
+  fe.mailtoParams.subject || (fe.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
+  fe.mailtoParams.body    || (fe.mailtoParams.body    = 'Errors listed below:');
   // If you want the user to customize these things when composing their email, you can set them to a
   // space character. If you set it to empty string, that is falsey and the the default will be used instead
 
-  root['exceptionalException'] = ee;
+  root['fatalException'] = fe;
 
 
   // Export/define function just like lodash

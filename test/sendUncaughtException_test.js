@@ -24,19 +24,19 @@
   module('sendUncaughtException', {
     // This will run before each test in this module.
     setup: function() {
-      delete window.onuncaughtException;
+      window.onuncaughtException = undefined;
     }
   });
 
   test('are defined', function(){
     expect(2);
     ok(sendUncaughtException, 'sendUncaughtException is defined');
-    ok(exceptionalException, 'exceptionalException is defined');
+    ok(fatalException, 'fatalException is defined');
   });
 
   test('property propagation', function(){
     expect(1);
-    // This tests the basic structure of exceptionalException, and the style of property use.
+    // This tests the basic structure of fatalException, and the style of property use.
     window.f = function(){
       function f() {
         console.log('someProp:', ef.someProp);
@@ -62,22 +62,24 @@
     strictEqual(sendUncaughtException('raw string test'), 'returnValue', 'raw string input, should still equal returnValue');
   });
 
-  module('exceptionalException');
+  module('fatalException');
 
-  asyncTest('exceptionalException', function(){
-    expect(2);
+  test('fatalException', function(){
+    expect(1);
 
     // Assuming we have a extendFunction.js devDependency with tests passing,
-    extendFunction('confirm', function(args, oldConfirm) {
+    window.confirm = function(message) {
       // greater than 2 because the library has a hardcoded '\n\n' in the confirm call
-      ok(args[0].length > 2, 'confirm was called');
-      start();
-    });
+      test('confirm was called', function(){
+        expect(1);
+        ok(message.length > 2, 'confirm was called');
+      });
+    };
 
-    var result = exceptionalException('string input');
+    var result = fatalException('string input');
     var isNumber = _.isNumber(result);
     if (isNumber) {
-      ok(isNumber, 'exceptionalException should return a timer id from setTimeout');
+      ok(isNumber, 'fatalException should return a timer id from setTimeout');
     } else {
       console.log({I: result, type: typeof result, isNumber: isNumber});
     }
@@ -92,11 +94,12 @@ SimpleError.prototype.toString = function () {
 strictEqual('facta', new SimpleError() + 'a', 'string concatentation should use an objects toString method');
 */
 
-  test('processException', function(){
+  test('CreateSimpleError', function(){
     var message = 'the error message';
     var err = new Error(message);
-    var result = sendUncaughtException.processException(err);
-    var specialProps = [
+    var result = sendUncaughtException.CreateSimpleError(err);
+
+    _([
       // found in all modern browsers:
       'name'
     , 'message'
@@ -115,18 +118,23 @@ strictEqual('facta', new SimpleError() + 'a', 'string concatentation should use 
     , 'expressionCaretOffset'
     , 'expressionEndOffset'
 
-    // old chrome: 'arguments', 'type'
-    ];
-    _(specialProps).forEach(function(item) {
+      //ie 10:
+    , 'number'
+
+      // old chrome, node:
+    , 'arguments'
+    , 'type'
+    ]).forEach(function(item) {
       if (err[item]) {
         if (!ok(
           result[item],
           'result should contain key:' + item
-        )) { console.log(result[item]) }
-        if (!ok(
-          result[item] === err[item],
-          'with value:' + err[item]
-        )) { console.log(result[item], err[item]) }
+        )) { console.log(result) } else {
+          if (!ok(
+            result[item] === err[item],
+            'with value:' + err[item] + ' actual:' + result[item] + ' type:' + typeof result[item]
+          )) { console.log(result[item], err[item]) }
+        }
       }
     });
   });
