@@ -83,24 +83,31 @@
     }
   });
 
-  test('stringifyException', function(){
-    var message = 'the error message';
-    var error = new Error(message);
-    var result = sendUncaughtException.stringifyException(error);
-    ok(
-      ~result.indexOf(message),
-      'stringifyException better not eliminate the original error message!!'
-    );
-    var specialKeys = [
-      /* found in modern browsers: */
-      'name'         /* all */
-    , 'message'      /* all */
-    , 'stack'        /* all */
-    , 'fileName'     /* FF  */
-    , 'lineNumber'   /* FF  */
-    , 'columnNumber' /* FF  */
+/*
+function SimpleError() {
+}
+SimpleError.prototype.toString = function () {
+  return 'fact';
+};
+strictEqual('facta', new SimpleError() + 'a', 'string concatentation should use an objects toString method');
+*/
 
-    , /* old safari */
+  test('processException', function(){
+    var message = 'the error message';
+    var err = new Error(message);
+    var result = sendUncaughtException.processException(err);
+    var specialProps = [
+      // found in all modern browsers:
+      'name'
+    , 'message'
+    , 'stack'
+
+      // FF:
+    , 'fileName'
+    , 'lineNumber'
+    , 'columnNumber'
+
+      // old safari:
     , 'line'
     , 'sourceId'
     , 'sourceURL'
@@ -108,16 +115,18 @@
     , 'expressionCaretOffset'
     , 'expressionEndOffset'
 
-    , /* old chrome */
-    , 'arguments'
-    , 'type'
+    // old chrome: 'arguments', 'type'
     ];
-    _(specialKeys).forEach(function(item) {
-      if (error[item]) {
-        ok(
-          ~result.indexOf(item + ':\n  ' + error[item]),
-          'result better contain stringified properties'
-        );
+    _(specialProps).forEach(function(item) {
+      if (err[item]) {
+        if (!ok(
+          result[item],
+          'result should contain key:' + item
+        )) { console.log(result[item]) }
+        if (!ok(
+          result[item] === err[item],
+          'with value:' + err[item]
+        )) { console.log(result[item], err[item]) }
       }
     });
   });

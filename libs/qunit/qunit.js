@@ -86,6 +86,10 @@ var QUnit,
 function Test( settings ) {
 	extend( this, settings );
 	this.assertions = [];
+	this.assertions.push = function( resultObject ){
+		Array.prototype.push.call(this, resultObject);
+		return resultObject.result;
+	};
 	this.testNumber = ++Test.count;
 }
 
@@ -529,6 +533,7 @@ assert = {
 			result: result,
 			message: msg
 		});
+		return result;
 	},
 
 	/**
@@ -935,7 +940,7 @@ extend( QUnit, {
 
 		runLoggingCallbacks( "log", QUnit, details );
 
-		config.current.assertions.push({
+		return config.current.assertions.push({
 			result: !!result,
 			message: output
 		});

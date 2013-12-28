@@ -36,8 +36,14 @@
     root = freeGlobal;
   }
 
+  // I'd like to use some javascript transpiler so this function is not needed:
+  function simpleForEach(array, callback) {
+    var index = array.length;
+    while (index--) {
+      callback(array[index]);
+    }
+  }
 
-  // window['prop'] ensures closure compiler advanced mode doesn't mistakenly rename a property.
   function sendUncaughtException(ex) {
     try {
       // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
@@ -45,11 +51,12 @@
     } catch ( _ ) {
       if (!root['sendUncaughtException']['allowPrimitives']) {
         if (window.console && console.error) {
-          console.error('PRIMITIVE VALUE THROWN:' + ex + '\n\n' +
-            'Please do throw new Error("message") instead of throw "message" so that you have a stack trace.\n\n' +
-            'Stack trace up to this point:\n' + (new Error('creating stack')).stack +
-            '\n\nTo silences these messages, do window.sendUncaughtException.allowPrimitives = true'
-          );
+          console.error([
+            'PRIMITIVE VALUE THROWN:' + ex,
+            'Please do: throw new Error("message"); instead of: throw "message"; so that you have a stack trace.',
+            'Stack trace up to this point:\n' + (new Error('creating stack')).stack,
+            'To silences these messages, do: window.sendUncaughtException.allowPrimitives = true'
+          ].join('\n\n'));
         }
       }
     }
@@ -76,47 +83,42 @@
       }
 
       clearTimeout(exceptionalException(exceptionCallingOnUncaughtException));
-      return [ex, exceptionalException(ex, 100)];
-
+      return exceptionalException(ex, 100);
     }
   }
-  // stringifyException is globally exposed for other libraries to use
-  sendUncaughtException['stringifyException'] = function(ex) {
-    // If input is a string, just return it
-    // string typecheck is lodash style (search "function isString" in lodash.compat.js)
-    if ( (typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]') ) {
-      return ex;
-      // Even though Object.prototype.toString.call may give '[object String]',
-      // new String('haha ') + 'other sting' === 'haha other string' (verified in chrome)
-      // This is because it uses the String classes toString method
+
+  // A SimpleError is just a plain object you can JSON.stringify or iterate over with the for-in loop.
+  // But, thanks to it's custom toString method,
+  // you can just concatenate it with other strings and not lose any information about the exception
+  // The stringified format is:
+  // someProperty:
+  //   someValue
+  //
+  //
+  function SimpleError(ex) {
+    // If there is a stacktrace property (Opera 10) alias it to the stack property
+    // Aside: interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
+    if (ex.stacktrace) {
+      ex.stack = ex.stacktrace;
     }
 
-    // Ensure stack property is computed. Or, attempt to alias Opera 10's stacktrace property to it
-    ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
-    /* interesting hack to always have a computed stack property:
-    extendFunction('Error', function(args, oldError) {
-      var ex = oldError.apply(window, args);
-      ex.stack || (ex.stacktrace ? (ex.stack = ex.stacktrace) : '');
-      return ex;
-    });
+    // First copy over general properties
+    for (var key in ex) {
+      this[key] = ex[key];
+    }
 
-    However, it ends up adding extra function calls to the stack frame..
-    we could increase the number of stack frames given in stack traces in chrome.
-    Also, we'd have to do this to every error type, (TypeError, ReferenceError, etc), and custom types would
-    also need the extension applied
-    */
-    var result = '';
-    /*
-    var specialKeys = [
-      // found in modern browsers:
-      'name'         // all
-    , 'message'      // all
-    , 'stack'        // all
-    , 'fileName'     // FF
-    , 'lineNumber'   // FF
-    , 'columnNumber' // FF
+    simpleForEach([
+      // found in all modern browsers:
+      'name'
+    , 'message'
+    , 'stack'
 
-    , // old safari:
+      // FF:
+    , 'fileName'
+    , 'lineNumber'
+    , 'columnNumber'
+
+      // old safari:
     , 'line'
     , 'sourceId'
     , 'sourceURL'
@@ -124,27 +126,67 @@
     , 'expressionCaretOffset'
     , 'expressionEndOffset'
 
-    , // old chrome:
+      //ie 10:
+    , 'number'
+
+      // old chrome, node:
     , 'arguments'
     , 'type'
-    ];
-    */
-    for (var key in ex) {
-      result += key + ':\n  ' + ex[key] + '\n';
+
+      // old IE:
+    , 'description'
+    ], function(key) {
+      if (ex[key]) {
+        this[key] = ex[key];
+      }
+    });
+  };
+  SimpleError.prototype.toString = function() {
+    var result = '';
+    for (var prop in this) {
+      if (Object.prototype.hasOwnProperty.call(this, prop)) {
+        result += prop + ':\n  ' + ex[prop] + '\n';
+      }
     }
     return result;
+  };
+
+
+  // A wrapper around SimpleError that filters out strings:
+  root['CreateSimpleError'] = function(ex) {
+    // If input is a string, just return it
+    if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
+      return ex;
+    } else {
+      if (!ex.name) {
+        simpleForEach([
+         'EvalError'
+        ,'RangeError'
+        ,'ReferenceError'
+        ,'SyntaxError'
+        ,'TypeError'
+        ,'URIError'
+        ], function(errorType) {
+          if (window[errorType]) return;
+          if (ex instanceof window[errorType]) {
+            ex.name = errorType;
+          }
+        });
+      }
+      return new SimpleError(ex);
+    }
   };
 
   // exceptionalException state variables
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
 
-  //var exceptionalException is too long. ee stands for exceptionalException
+  //var exceptionalException .... is too long. ee stands for exceptionalException
   var ee = function(message, msToWaitForMoreExceptions) {
-    //'use strict' is senseless here. We don't need the crutch creating more exceptions, especially here.
+    //'use strict' is senseless here. We don't need the crutch creating more exceptions
 
     // Make sure the message is a string
-    message = sendUncaughtException['stringifyException'](message);
+    message = root['CreateSimpleError'](message);
 
     // Add the message to the email body.
     ee.mailtoParams.body += '\n\n' + message;
@@ -163,9 +205,7 @@
 
         ee.mailtoParams.body += '\n\n' + ee.bodyEnd;
 
-        var emailPreview = ee.bodyEnd; //re-use variable to conserve memory
-
-        emailPreview = [
+        var emailPreview = [
           'To:'      + ee.emailAddress,
           'Subject:' + ee.mailtoParams.subject,
                        ee.mailtoParams.body
@@ -207,17 +247,19 @@
       'We had a serious error and were not able to report it. \n\n' +
       'Pressing "OK" will open up your default email application to send this email:',
     mailtoParams: {/*
-      subject: See default below.
-      body: *START* of the body of the email. See default below.
+      subject: See default just after the for loop below.
+      body: *START* of the body of the email. See default just after the for loop below.
       cc: Feel free to add cc and bcc properties
     */},
-    /*END* of the email*/
     bodyEnd: 'Hope this helps.'
   };
 
   // copy over options from root['exceptionalException'] to ee, falling back to defaults.
   // first ensure root['exceptionalException'] is an object type for inside this for loop
-  objectTypes[typeof root['exceptionalException']] ||  (root['exceptionalException'] = {});
+  if (!root['exceptionalException'] || !objectTypes[typeof root['exceptionalException']]) {
+    root['exceptionalException'] = {}
+  }
+  root['exceptionalException'] || (root['exceptionalException'] = {});
   for (var opt in defaults) {
     if (defaults.hasOwnProperty(opt)) {
       ee[opt] = root['exceptionalException'][opt] || defaults[opt];
