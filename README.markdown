@@ -19,7 +19,7 @@ In order to get a real stack trace, all you have is the `try-catch` block*.
 
 How do you catch all errors and send them to one function?
 
-Include the higher-level library: <a href="http://Github.com/devinrhode2/shield.js">Shield.js</a>
+Include the higher-level library <a href="http://Github.com/devinrhode2/shield.js">Shield.js</a> in your page, and tell it what libraries you are using.
 
 #### Vision
 I'd like to work with libraries to establish `window.onuncaughtException` as a standard, so you don't have to
