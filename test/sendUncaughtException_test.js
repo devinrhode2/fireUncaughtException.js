@@ -21,17 +21,18 @@
       throws(block, [expected], [message])
   */
 
-  module('sendUncaughtException', {
-    // This will run before each test in this module.
-    setup: function() {
-      window.onuncaughtException = undefined;
-    }
-  });
+  module('find-general-browser-bugs');
 
-  test('are defined', function(){
-    expect(2);
-    ok(sendUncaughtException, 'sendUncaughtException is defined');
-    ok(fatalException, 'fatalException is defined');
+  test('Error.toString gets used', function(){
+    var err = new Erorr('a');
+    err.toString = function() {
+      return 'haha';
+    };
+    strictEqual(
+      err + 'a',
+      'hahaa',
+      'concatenating exceptions with strings should call the top level toString method'
+    );
   });
 
   test('property propagation', function(){
@@ -53,6 +54,19 @@
     strictEqual(f(), window.f.someProp);
   });
 
+
+  module('sendUncaughtException', {
+    // This will run before each test in this module.
+    setup: function() {
+      window.onuncaughtException = undefined;
+    }
+  });
+
+  test('are defined', function(){
+    expect(2);
+    ok(sendUncaughtException, 'sendUncaughtException is defined');
+    ok(fatalException, 'fatalException is defined');
+  });
 
   test('onuncaughtException\'s return value should get returned', function(){
     window.onuncaughtException = function(exception) {
