@@ -66,46 +66,46 @@ try {
 ```
 
 `sendUncaughtException` simply calls `window.onuncaughtException` — but if there's an exception
-in doing so, we pass that exceptional exception to, well, `exceptionalException`.
+in doing so, we pass that fatal exception to `fatalException`.
 
-`exceptionalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
+`fatalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
 and then creates an email report of the errors and asks the user if they are willing to send it with a `confirm` dialog.
 If they hit OK, a window for a `mailto` link with all the info pre-populated pops up.
 
 The `confirm` dialog also happens to be a quick and convenient way to
 discover errors in your `window.onuncaughtException` handler.
 
-If you want to do something other than ask users to email errors, fork this library and redefine `exceptionalException`
+If you want to do something other than ask users to email errors, fork this library and redefine `fatalException`
 
 Also, this libraries method for turning an exception into a string is exposed as `sendUncaughtException.stringifyException`. The method takes in an exception or string and returns a string.
 
 # Options
-exceptionalException adds properties onto itself as options.
+fatalException adds properties onto itself as options.
 
 The options and their defaults are listed around line 129 in `sendUncaughtException.js` at `var defaultOptions`
 
 To customize any of these options, do:
 ```javascript
-exceptionalException.option = 'your new value';
+fatalException.option = 'your new value';
 ```
 
-You can use exceptionalException for other mission-critical fails:
+You can use fatalException for other mission-critical fails:
 
 ```javascript
 try {
   loadScript('jquery')
 } catch (e) {
-  return exceptionalException('failed to load jQuery.')
+  return fatalException('failed to load jQuery.')
 }
 ```
 
-By default `exceptionalException` will wait 34 milliseconds for other errors to reel in, you can set this to
-0 or any other time my passing in the number as the second parameter to `exceptionalException`. For example:
+By default `fatalException` will wait 34 milliseconds for other errors to reel in, you can set this to
+0 or any other time my passing in the number as the second parameter to `fatalException`. For example:
 ```javascript
-exceptionalException('failed to load jQuery.', 5000); // wait for other load failures
+fatalException('failed to load jQuery.', 5000); // wait for other load failures
 ```
-Futhermore, `exceptionalException` returns the timer id from setTimeout, allowing you to
-`clearTimeout` if you know you're going to call `exceptionalException` again very shortly.
+Futhermore, `fatalException` returns the timer id from setTimeout, allowing you to
+`clearTimeout` if you know you're going to call `fatalException` again very shortly.
 
 # Download
 

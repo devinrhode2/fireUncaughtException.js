@@ -101,7 +101,7 @@
     var result = '';
     for (var prop in this) {
       if (Object.prototype.hasOwnProperty.call(this, prop)) {
-        result += prop + ':\n  ' + ex[prop] + '\n';
+        result += prop + ':\n  ' + this[prop] + '\n';
       }
     }
     return result;
@@ -131,7 +131,7 @@
       }
       var result = new SimpleError();
       // If there is a stacktrace property (Opera 10) alias it to the stack property
-      // Aside: interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
+      // Interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
       if (ex.stacktrace) {
         ex.stack = ex.stacktrace;
       }
@@ -141,7 +141,7 @@
         result[key] = ex[key];
       }
 
-      // this list of special properties was sourced from TraceKit.js,
+      // this list of special properties was sourced on Jan 1st, 2014 from TraceKit.js,
       // https://raw.github.com/stacktracejs/stacktrace.js/master/test/CapturedExceptions.js
       // and https://docs.google.com/spreadsheet/ccc?key=0AjhErv9K3dPFdGVkVWlxXzBiOUd1ckN2bEZjWEdObEE&usp=drive_web#gid=0
       simpleForEach([
@@ -174,7 +174,7 @@
           result[key] = ex[key];
         }
       });
-      // old IE:
+      // old IE, only include unique descriptions:
       if (ex.description && ex.description !== ex.message) {
         result.description = ex.description;
       }
@@ -182,7 +182,7 @@
     }
   };
 
-  // fatalException state variables
+  // state variables for fatalException
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
 
