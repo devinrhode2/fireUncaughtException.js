@@ -98,12 +98,20 @@
   }
 
   // Ensure you can JSON.stringify or iterate over with the for-in loop.
-  // A wrapper around SimpleError that filters out strings:
   sendUncaughtException['createStringyException'] = function(ex) {
     // If input is a string, just return it
     if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
       return ex;
     } else {
+      // With the custom .toString method,
+      // you can just concatenate it with other strings and not lose any information about the exception
+      // The stringified format is:
+      // someProperty:
+      //   someValue
+      //
+      //
+      ex.toString = toNiceString;
+
       // If there is a stacktrace property (Opera 10) alias it to the stack property
       // Interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
       if (ex.stacktrace) {
@@ -148,14 +156,6 @@
         ex.description = ex.description;
       }
 
-      // With the custom .toString method,
-      // you can just concatenate it with other strings and not lose any information about the exception
-      // The stringified format is:
-      // someProperty:
-      //   someValue
-      //
-      //
-      ex.toString = toNiceString;
       return ex;
     }
   };
