@@ -85,6 +85,13 @@
     }
   });
 
+  test('toString property gets used', function(){
+    var err = new Error('a');
+    err.toString = function() {
+      ok('errors toString got called', 'everything is ok');
+    };
+    err + 'string';
+  });
 /*
 function SimpleError() {
 }
