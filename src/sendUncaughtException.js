@@ -87,9 +87,19 @@
     }
   }
 
+  function toNiceString() {
+    var result = '';
+    for (var prop in this) {
+      if (Object.prototype.hasOwnProperty.call(this, prop)) {
+        result += prop + ':\n  ' + this[prop] + '\n';
+      }
+    }
+    return result;
+  }
+
   // Ensure you can JSON.stringify or iterate over with the for-in loop.
   // A wrapper around SimpleError that filters out strings:
-  sendUncaughtException['beautifyException'] = function(ex) {
+  sendUncaughtException['createStringyException'] = function(ex) {
     // If input is a string, just return it
     if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
       return ex;
@@ -145,15 +155,7 @@
       //   someValue
       //
       //
-      ex.toString = function() {
-        var result = '';
-        for (var prop in this) {
-          if (Object.prototype.hasOwnProperty.call(this, prop)) {
-            result += prop + ':\n  ' + this[prop] + '\n';
-          }
-        }
-        return result;
-      };
+      ex.toString = toNiceString;
       return ex;
     }
   };
