@@ -103,57 +103,57 @@
 
   // Ensure you can JSON.stringify or iterate over with the for-in loop.
   sendUncaughtException['createStringyException'] = function(ex) {
-    // If input is a string, just return it
+    // If input is a string, turn it into an Error
     if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
       ex = new Error(ex);
     }
-      ex.toString = toNiceString;
+    ex.toString = toNiceString;
 
-      // If there is a stacktrace property (Opera 10) alias it to the stack property
-      // Interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
-      if (ex.stacktrace) {
-        ex.stack = ex.stacktrace;
+    // If there is a stacktrace property (Opera 10) alias it to the stack property
+    // Interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
+    if (ex.stacktrace) {
+      ex.stack = ex.stacktrace;
+    }
+
+    // this list of special properties was sourced on Jan 1st, 2014 from TraceKit.js,
+    // https://raw.github.com/stacktracejs/stacktrace.js/master/test/CapturedExceptions.js
+    // and https://docs.google.com/spreadsheet/ccc?key=0AjhErv9K3dPFdGVkVWlxXzBiOUd1ckN2bEZjWEdObEE&usp=drive_web#gid=0
+    simpleForEach([
+      // found in all modern browsers:
+      'name'
+    , 'message'
+    , 'stack'
+
+      // FF:
+    , 'fileName'
+    , 'lineNumber'
+    , 'columnNumber'
+
+      // old safari:
+    , 'line'
+    , 'sourceId'
+    , 'sourceURL'
+    , 'expressionBeginOffset'
+    , 'expressionCaretOffset'
+    , 'expressionEndOffset'
+
+      //ie 10:
+    , 'number'
+
+      // old chrome, node:
+    , 'arguments'
+    , 'type'
+    ], function(key) {
+      if (ex[key]) {
+        ex[key] = ex[key];
       }
+    });
+    // old IE, only include unique descriptions:
+    if (ex.description && ex.description !== ex.message) {
+      ex.description = ex.description;
+    }
 
-      // this list of special properties was sourced on Jan 1st, 2014 from TraceKit.js,
-      // https://raw.github.com/stacktracejs/stacktrace.js/master/test/CapturedExceptions.js
-      // and https://docs.google.com/spreadsheet/ccc?key=0AjhErv9K3dPFdGVkVWlxXzBiOUd1ckN2bEZjWEdObEE&usp=drive_web#gid=0
-      simpleForEach([
-        // found in all modern browsers:
-        'name'
-      , 'message'
-      , 'stack'
-
-        // FF:
-      , 'fileName'
-      , 'lineNumber'
-      , 'columnNumber'
-
-        // old safari:
-      , 'line'
-      , 'sourceId'
-      , 'sourceURL'
-      , 'expressionBeginOffset'
-      , 'expressionCaretOffset'
-      , 'expressionEndOffset'
-
-        //ie 10:
-      , 'number'
-
-        // old chrome, node:
-      , 'arguments'
-      , 'type'
-      ], function(key) {
-        if (ex[key]) {
-          ex[key] = ex[key];
-        }
-      });
-      // old IE, only include unique descriptions:
-      if (ex.description && ex.description !== ex.message) {
-        ex.description = ex.description;
-      }
-
-      return ex;
+    return ex;
   };
 
   // state variables for fatalException
