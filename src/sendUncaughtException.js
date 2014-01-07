@@ -43,6 +43,7 @@
   }
   var undefined; // safe reference to undefined.
   // Hopefully in the future, we can remove this because undefined will be a constant in ES6
+  // and be polyfilled by an ES6 transpiler
 
   function sendUncaughtException(ex) {
     try {
@@ -65,25 +66,28 @@
     try {
       return window.onuncaughtException(ex);
       // return is included to be as transparent as possible,
-      // it makes new interesting use cases and patterns possible (which are yet to be known)
+      // it makes new interesting use cases and patterns possible for other libraries using this one
       // It may also be good for clearing resources, and makes the function more testable
 
       // I use this try-catch structure instead of several if checks for efficiency
-    } catch (exceptionCallingOnUncaughtException) {
+    } catch (ex2) {
 
-      // Attempt to give an Error with more clarity:
-      if (window.onuncaughtException === undefined) {
-        exceptionCallingOnUncaughtException = [
-          'onuncaughtException is undefined.',
-          'Example definition:',
-          '  window.onuncaughtException = function (ex) {',
-          '    // log ex.stack to your server',
-          '  };'
-        ].join('\n');
-      }
-
-      clearTimeout(fatalException(exceptionCallingOnUncaughtException));
-      return fatalException(ex, 100);
+      // fe stands for fatalException
+      clearTimeout(
+        fe(
+          window.onuncaughtException === undefined ?
+            // Attempting to give an Error with more clarity:
+             ['onuncaughtException is undefined.',
+              'Example definition:',
+              '  window.onuncaughtException = function (ex) {',
+              '    // log ex.stack to your server',
+              '  };'
+             ].join('\n')
+           :
+             sendUncaughtException['createStringyException'](ex2)
+        )
+      );
+      return fe(ex, 100);
     }
   }
 
@@ -169,7 +173,7 @@
     //'use strict' is senseless here. We don't need the crutch creating more exceptions
 
     // Make sure the message is a string
-    message = sendUncaughtException['CreateSimpleError'](message);
+    message = sendUncaughtException['createStringyException'](message);
 
     // Add the message to the email body.
     fe.mailtoParams.body += '\n\n' + message;
@@ -240,7 +244,7 @@
   // copy over options from root['fatalException'] to fe, falling back to defaults.
   // first ensure root['fatalException'] is an object type for inside this for loop
   if (!root['fatalException'] || !objectTypes[typeof root['fatalException']]) {
-    root['fatalException'] = {}
+    root['fatalException'] = {};
   }
   for (var opt in defaults) {
     if (defaults.hasOwnProperty(opt)) {
