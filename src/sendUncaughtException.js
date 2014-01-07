@@ -84,10 +84,10 @@
               '  };'
              ].join('\n')
            :
-             sendUncaughtException['createStringyException'](ex2)
+             ex2
         )
       );
-      return fe(ex, 100);
+      return fe(ex, {wait: 100});
     }
   }
 
@@ -105,15 +105,8 @@
   sendUncaughtException['createStringyException'] = function(ex) {
     // If input is a string, just return it
     if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
-      return ex;
-    } else {
-      // With the custom .toString method,
-      // you can just concatenate it with other strings and not lose any information about the exception
-      // The stringified format is:
-      // someProperty:
-      //   someValue
-      //
-      //
+      ex = new Error(ex);
+    }
       ex.toString = toNiceString;
 
       // If there is a stacktrace property (Opera 10) alias it to the stack property
@@ -161,7 +154,6 @@
       }
 
       return ex;
-    }
   };
 
   // state variables for fatalException
@@ -169,11 +161,13 @@
   var lastMessageReceived = '';
 
   //var fatalException .... is too long. fe stands for fatalException
-  var fe = function(message, msToWaitForMoreExceptions) {
+  var fe = function(message, options) {
     //'use strict' is senseless here. We don't need the crutch creating more exceptions
 
     // Make sure the message is a string
     message = sendUncaughtException['createStringyException'](message);
+
+    var msToWaitForMoreExceptions = options.wait || options.msToWaitForMoreExceptions || options.msToWait;
 
     // Add the message to the email body.
     fe.mailtoParams.body += '\n\n' + message;

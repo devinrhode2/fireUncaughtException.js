@@ -21,7 +21,7 @@ How do you catch all errors and send them to one function?
 
 Include the higher-level library <a href="http://Github.com/devinrhode2/shield.js">**Shield.js**</a> in your page, and tell it what libraries you are using. It'll handle the rest.
 
-If you work on javascript libraries, please read on. This library is a low-level component that Shield.js uses.
+If you work on javascript libraries, please read on. This library is a low-level component that Shield.js uses, and you may also be interested in using.
 
 [![Build Status](https://secure.travis-ci.org/devinrhode2/sendUncaughtException.png?branch=master)](http://travis-ci.org/devinrhode2/sendUncaughtException)
 
@@ -33,7 +33,7 @@ I'd like to work with libraries to establish `window.onuncaughtException` as a s
 re-define library functions.
 
 Eventually I'm sure it will be very clear for browsers to also send exceptions to this same function,
-but perhaps as a `window` event like `load`.
+but perhaps as an event like `load` on the `window` object.
 
 Most people will want to just send uncaught exceptions to a
 `window.onuncaughtException` function, without a library, like this:
@@ -59,7 +59,7 @@ try {
 ```
 
 If you strongly believe that the javascript community should have a way to register a global `uncaughtException`
-handler like I do, you'll probably want to use this library.
+handler like I do, you may want to use this component in your library.
 
 # Usage:
 
@@ -74,7 +74,7 @@ try {
 `sendUncaughtException` simply calls `window.onuncaughtException` — but if there's an exception
 in doing so, we pass that fatal exception to `fatalException`.
 
-`fatalException` will wait 100 milliseconds until it is no longer receiving any new exceptions,
+`fatalException` will wait 34 milliseconds (2 frames) by default until it is no longer receiving any new exceptions,
 and then creates an email report of the errors and asks the user if they are willing to send it with a `confirm` dialog.
 If they hit OK, a window for a `mailto` link with all the info pre-populated pops up.
 
@@ -83,7 +83,17 @@ discover errors in your `window.onuncaughtException` handler.
 
 If you want to do something other than ask users to email errors, fork this library and redefine `fatalException`
 
-Also, this libraries method for turning an exception into a string is exposed as `sendUncaughtException.stringifyException`. The method takes in an exception or string and returns a string.
+Also, this libraries method for turning an exception into a string is exposed as `sendUncaughtException.createStringyException`. The method takes in an exception and returns a JSON-stringifiable exception with an enhanced toString method. Because of this, you can just concatenate it with other strings and not lose any information about the exception. The stringified format is:
+```
+someProperty:
+ someValue
+```
+
+Furthermore, if you pass a string into this method, it will just be returned. If you want a real exception object, create one yourself and pass it in, like this:
+```
+sendUncaughtException.createStringyException(new Error('your string'))
+```
+
 
 # Options
 fatalException adds properties onto itself as options.
