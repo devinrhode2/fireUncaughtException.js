@@ -87,17 +87,7 @@
     }
   }
 
-  // A SimpleError is just a plain object you can JSON.stringify or iterate over with the for-in loop.
-  // But, thanks to it's custom toString method,
-  // you can just concatenate it with other strings and not lose any information about the exception
-  // The stringified format is:
-  // someProperty:
-  //   someValue
-  //
-  //
-  function SimpleError() {
-  };
-  SimpleError.prototype.toString = function() {
+  function toNiceString() {
     var result = '';
     for (var prop in this) {
       if (Object.prototype.hasOwnProperty.call(this, prop)) {
@@ -105,40 +95,27 @@
       }
     }
     return result;
-  };
+  }
 
-
-  // A wrapper around SimpleError that filters out strings:
-  sendUncaughtException['CreateSimpleError'] = function(ex) {
+  // Ensure you can JSON.stringify or iterate over with the for-in loop.
+  sendUncaughtException['createStringyException'] = function(ex) {
     // If input is a string, just return it
     if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
       return ex;
     } else {
-      if (!ex.name) {
-        simpleForEach([
-         'EvalError'
-        ,'RangeError'
-        ,'ReferenceError'
-        ,'SyntaxError'
-        ,'TypeError'
-        ,'URIError'
-        ], function(errorType) {
-          if (window[errorType]) return;
-          if (ex instanceof window[errorType]) {
-            ex.name = errorType;
-          }
-        });
-      }
-      var result = new SimpleError();
+      // With the custom .toString method,
+      // you can just concatenate it with other strings and not lose any information about the exception
+      // The stringified format is:
+      // someProperty:
+      //   someValue
+      //
+      //
+      ex.toString = toNiceString;
+
       // If there is a stacktrace property (Opera 10) alias it to the stack property
       // Interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
       if (ex.stacktrace) {
         ex.stack = ex.stacktrace;
-      }
-
-      // First copy over general properties
-      for (var key in ex) {
-        result[key] = ex[key];
       }
 
       // this list of special properties was sourced on Jan 1st, 2014 from TraceKit.js,
@@ -171,14 +148,15 @@
       , 'type'
       ], function(key) {
         if (ex[key]) {
-          result[key] = ex[key];
+          ex[key] = ex[key];
         }
       });
       // old IE, only include unique descriptions:
       if (ex.description && ex.description !== ex.message) {
-        result.description = ex.description;
+        ex.description = ex.description;
       }
-      return result;
+
+      return ex;
     }
   };
 
