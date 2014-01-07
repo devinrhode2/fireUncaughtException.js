@@ -4,8 +4,31 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
+
+    connect: {
+      server: {
+        options: {
+          base: "",
+          port: 9999
+        }
+      }
+    },
+    'saucelabs-qunit': {
+      all: {
+        options: {
+          urls: ['http://127.0.0.1:9999/test/**/*.html'],
+          tunnelTimeout: 5,
+          build: process.env.TRAVIS_JOB_ID,
+          concurrency: 3,
+          browsers: grunt.file.readJSON('BrowserList.json'),
+          testname: "qunit tests",
+          tags: ["master"]
+        }
+      }
+    },
+
     // Metadata.
-    pkg: grunt.file.readJSON('sendUncaughtException.jquery.json'),
+    pkg: grunt.file.readJSON('package.json'),
     banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
       '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
       '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
@@ -15,22 +38,12 @@ module.exports = function(grunt) {
     clean: {
       files: ['dist']
     },
-    concat: {
-      options: {
-        banner: '<%= banner %>',
-        stripBanners: true
-      },
-      dist: {
-        src: ['src/<%= pkg.name %>.js'],
-        dest: 'dist/<%= pkg.name %>.js'
-      },
-    },
     uglify: {
       options: {
         banner: '<%= banner %>'
       },
       dist: {
-        src: '<%= concat.dist.dest %>',
+        src: 'src/<%= pkg.name %>.js',
         dest: 'dist/<%= pkg.name %>.min.js'
       },
     },
@@ -73,15 +86,16 @@ module.exports = function(grunt) {
     },
   });
 
-  // These plugins provide necessary tasks.
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
+  // Loading dependencies
+  for (var key in grunt.file.readJSON('package.json').devDependencies) {
+    if (key !== 'grunt' && key.indexOf('grunt') === 0) {
+      grunt.loadNpmTasks(key);
+    }
+  }
 
   // Default task.
   grunt.registerTask('default', ['jshint', 'qunit', 'clean', 'concat', 'uglify']);
 
+  // grunt.registerTask('dev',  ['connect', 'watch']);
+  grunt.registerTask('test', ['jshint', 'connect', 'saucelabs-qunit']);
 };

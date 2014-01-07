@@ -23,6 +23,11 @@ Include the higher-level library <a href="http://Github.com/devinrhode2/shield.j
 
 If you work on javascript libraries, please read on. This library is a low-level component that Shield.js uses.
 
+[![Build Status](https://secure.travis-ci.org/devinrhode2/sendUncaughtException.png?branch=master)](http://travis-ci.org/devinrhode2/sendUncaughtException)
+
+[![Selenium Test Status](https://saucelabs.com/buildstatus/sendUncaughtException)](https://saucelabs.com/u/sendUncaughtException)
+[![Selenium Browser Matrix](https://saucelabs.com/browser-matrix/sendUncaughtException.svg)](https://saucelabs.com/u/sendUncaughtException)
+
 #### Vision
 I'd like to work with libraries to establish `window.onuncaughtException` as a standard, so you don't have to
 re-define library functions.

@@ -24,7 +24,7 @@
   module('find-general-browser-bugs');
 
   test('Error.toString gets used', function(){
-    var err = new Erorr('a');
+    var err = new Error('a');
     err.toString = function() {
       return 'haha';
     };
