@@ -91,7 +91,7 @@ module.exports = function(grunt) {
   }
 
   // Default task.
-  grunt.registerTask('default', ['jshint', 'qunit', 'clean', 'concat', 'uglify']);
+  grunt.registerTask('default', ['jshint', 'qunit', 'clean', 'uglify']);
 
   // grunt.registerTask('dev',  ['connect', 'watch']);
   grunt.registerTask('test', ['jshint', 'connect', 'saucelabs-qunit']);
