@@ -74,7 +74,7 @@
 
       // fe stands for fatalException
       clearTimeout(
-        fe(
+        fatal(
           window.onuncaughtException === undefined ?
             // Attempting to give an Error with more clarity:
              ['onuncaughtException is undefined.',
@@ -87,19 +87,21 @@
              ex2
         )
       );
-      return fe(ex, {wait: 100});
+      return fatal(ex, {wait: 100});
     }
   }
 
   function toNiceString() {
     var result = '';
     for (var prop in this) {
-      if (Object.prototype.hasOwnProperty.call(this, prop)) {
+      if (Object.prototype.hasOwnProperty.call(this, prop) && prop != 'toString') {
         result += prop + ':\n  ' + this[prop] + '\n';
       }
     }
     return result;
   }
+  toNiceString.nice = true;
+  Error.prototype.toString = toNiceString;
 
   // Ensure you can JSON.stringify or iterate over with the for-in loop.
   sendUncaughtException['createStringyException'] = function(ex) {
@@ -107,7 +109,11 @@
     if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
       ex = new Error(ex);
     }
-    ex.toString = toNiceString;
+
+    // Ensure we always have a nice
+    if (ex.toString && !ex.toString.nice) {
+      ex.toString = toNiceString;
+    }
 
     // If there is a stacktrace property (Opera 10) alias it to the stack property
     // Interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
@@ -160,8 +166,8 @@
   var receivedErrorMessages = {};
   var lastMessageReceived = '';
 
-  //var fatalException .... is too long. fe stands for fatalException
-  var fe = function(message, options) {
+  //fatal exception
+  var fatal = function(message, options) {
     //'use strict' is senseless here. We don't need the crutch creating more exceptions
 
     // Make sure the message is a string
