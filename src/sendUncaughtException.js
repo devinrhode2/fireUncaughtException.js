@@ -90,29 +90,41 @@
     }
   }
 
-  function toNiceString() {
+  // A SimpleError is just a plain object you can JSON.stringify or iterate over with the for-in loop.
+  // But, thanks to it's custom toString method,
+  // you can just concatenate it with other strings and not lose any information about the exception
+  // The stringified format is:
+  // someProperty:
+  //   someValue
+  //
+  //
+  function SimpleError() {
+  };
+  SimpleError.prototype.toString = function() {
     var result = '';
     for (var prop in this) {
-      if (Object.prototype.hasOwnProperty.call(this, prop) && prop != 'toString') {
+      if (Object.prototype.hasOwnProperty.call(this, prop)) {
         result += prop + ':\n  ' + this[prop] + '\n';
       }
     }
     return result;
-  }
-  toNiceString.nice = true;
-  Error.prototype.toString = toNiceString;
+  };
 
+/*
+
+Hello, welcome to this comment
+right, right now. Right now owowow right, right now.
+
+
+
+*/
   // Ensure you can JSON.stringify or iterate over with the for-in loop.
   sendUncaughtException['createStringyException'] = function(ex) {
     // If input is a string, turn it into an Error
     if ( typeof ex == 'string' || Object.prototype.toString.call(ex) == '[object String]' ) {
-      ex = new Error(ex);
+      ex = new SimpleError(ex);
     }
-
-    // Ensure we always have a nice
-    if (ex.toString && !ex.toString.nice) {
-      ex.toString = toNiceString;
-    }
+    var obj = new SimpleError(ex);
 
     // If there is a stacktrace property (Opera 10) alias it to the stack property
     // Interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
