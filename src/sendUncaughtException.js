@@ -72,9 +72,8 @@
       // I use this try-catch structure instead of several if checks for efficiency
     } catch (ex2) {
 
-      // fe stands for fatalException
       clearTimeout(
-        fatal(
+        fatal( //for fatal exceptions
           window.onuncaughtException === undefined ?
             // Attempting to give an Error with more clarity:
              ['onuncaughtException is undefined.',
@@ -117,8 +116,13 @@
 
     // If there is a stacktrace property (Opera 10) alias it to the stack property
     // Interesting hack to always have a computed stack property: gist.github.com/devinrhode2/8154512
-    if (ex.stacktrace) {
+    if (ex.stacktrace && !ex.stack) {
       ex.stack = ex.stacktrace;
+    }
+
+    // Copy over general properties
+    for (var key in ex) {
+      ex[key] = ex[key];
     }
 
     // this list of special properties was sourced on Jan 1st, 2014 from TraceKit.js,
@@ -176,7 +180,7 @@
     var msToWaitForMoreExceptions = options.wait || options.msToWaitForMoreExceptions || options.msToWait;
 
     // Add the message to the email body.
-    fe.mailtoParams.body += '\n\n' + message;
+    fatal.mailtoParams.body += '\n\n' + message;
 
     // Mark message as received.
     if (receivedErrorMessages[message]) return 'already received this error message';
@@ -190,25 +194,25 @@
       return setTimeout(function(){
         if (lastMessageReceived !== lastMessageAtStartOfTimeout) return; //bail and try sending on next timeout
 
-        fe.mailtoParams.body += '\n\n' + fe.bodyEnd;
+        fatal.mailtoParams.body += '\n\n' + fatal.bodyEnd;
 
         var emailPreview = [
-          'To:'      + fe.emailAddress,
-          'Subject:' + fe.mailtoParams.subject,
-                       fe.mailtoParams.body
+          'To:'      + fatal.emailAddress,
+          'Subject:' + fatal.mailtoParams.subject,
+                       fatal.mailtoParams.body
         ].join('\n');
 
         // We have the error report containing all errors setup and are ready to send it,
         // let's ask the user if they are willing to:
-        if (confirm(fe.emailPreface + '\n\n' + emailPreview)) {
+        if (confirm(fatal.emailPreface + '\n\n' + emailPreview)) {
 
           var finalUrl = message; //re-use message variable to conserve memory
-          finalUrl = 'mailto:' + fe.emailAddress + '?';
+          finalUrl = 'mailto:' + fatal.emailAddress + '?';
 
           // mailtoParams need to be turned into a querystring and appended to finalUrl
-          for (var param in fe.mailtoParams) {
-            if (fe.mailtoParams.hasOwnProperty(param)) {
-              finalUrl += param + '=' + encodeURIComponent(fe.mailtoParams) + '&';
+          for (var param in fatal.mailtoParams) {
+            if (fatal.mailtoParams.hasOwnProperty(param)) {
+              finalUrl += param + '=' + encodeURIComponent(fatal.mailtoParams) + '&';
             }
           }
 
@@ -241,25 +245,25 @@
     bodyEnd: 'Hope this helps.'
   };
 
-  // copy over options from root['fatalException'] to fe, falling back to defaults.
+  // copy over options from root['fatalException'] to fatal, falling back to defaults.
   // first ensure root['fatalException'] is an object type for inside this for loop
   if (!root['fatalException'] || !objectTypes[typeof root['fatalException']]) {
     root['fatalException'] = {};
   }
   for (var opt in defaults) {
     if (defaults.hasOwnProperty(opt)) {
-      fe[opt] = root['fatalException'][opt] || defaults[opt];
+      fatal[opt] = root['fatalException'][opt] || defaults[opt];
     }
   }
 
-  // Either fe.mailtoParams.subject/body
+  // Either fatal.mailtoParams.subject/body
   // are defined by now   OR (we will assign it to our default value)
-  fe.mailtoParams.subject || (fe.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
-  fe.mailtoParams.body    || (fe.mailtoParams.body    = 'Errors listed below:');
+  fatal.mailtoParams.subject || (fatal.mailtoParams.subject = 'Automatic error reporting failed, here\'s why');
+  fatal.mailtoParams.body    || (fatal.mailtoParams.body    = 'Errors listed below:');
   // If you want the user to customize these things when composing their email, you can set them to a
   // space character. If you set it to empty string, that is falsey and the the default will be used instead
 
-  root['fatalException'] = fe;
+  root['fatalException'] = fatal;
 
 
   // Export/define function just like lodash
